@@ -1,0 +1,220 @@
+<mxfile host="65bd71144e">
+    <diagram name="Use Case Diagram" id="usecase1">
+        <mxGraphModel dx="1500" dy="809" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="system-boundary" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#343a40;strokeWidth=3;fontSize=16;fontStyle=1;dashed=1;align=left;verticalAlign=top" parent="1" vertex="1">
+                    <mxGeometry x="300" y="100" width="710" height="800" as="geometry"/>
+                </mxCell>
+                <mxCell id="doctor-actor" value="" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="180" y="250" width="60" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="doctor-label" value="👨‍⚕️ Doctor" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="170" y="380" width="80" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="patient-actor" value="" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="180" y="550" width="60" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="patient-label" value="🧍 Patient" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="170" y="680" width="80" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="system-actor" value="" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="1070" y="400" width="60" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="system-label" value="⚙️ System" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="530" width="80" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-login" value="Select User Type&#xa;(Doctor/Patient)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="130" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-view-patients" value="View Patient List" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="490" y="200" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-create-diet" value="Create Diet Plan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="670" y="210" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-edit-diet" value="Edit Diet Plan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="300" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-manage-patients" value="Manage Patient&#xa;Information" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="400" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-select-doctor" value="Select Doctor" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="450" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-take-assessment" value="Take Prakruti&#xa;Assessment" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="570" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-view-diet" value="View Diet Plan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="480" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-view-doctor-info" value="View Doctor&#xa;Information" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="680" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-track-progress" value="Track Health&#xa;Progress" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="790" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-analyze-dosha" value="Analyze Dosha&#xa;Constitution" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="570" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-generate-plan" value="Generate&#xa;Personalized&#xa;Diet Plan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="830" y="270" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-export-pdf" value="Export to PDF" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="450" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-validate-data" value="Validate Input&#xa;Data" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="350" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-store-data" value="Store Patient&#xa;Data" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="670" y="770" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc-send-notifications" value="Send Notifications" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="680" width="140" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc1" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=16;" parent="1" source="doctor-actor" target="uc-login" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="200" as="sourcePoint"/>
+                        <mxPoint x="270" y="150" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc2" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=16;" parent="1" source="doctor-actor" target="uc-view-patients" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="280" as="sourcePoint"/>
+                        <mxPoint x="270" y="230" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc3" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=16;" parent="1" source="doctor-actor" target="uc-check-assessment" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="300" as="sourcePoint"/>
+                        <mxPoint x="270" y="250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc4" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=16;" parent="1" source="doctor-actor" target="uc-create-diet" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="320" as="sourcePoint"/>
+                        <mxPoint x="270" y="270" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc5" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=16;" parent="1" source="uc-check-assessment" target="uc-edit-diet" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="340" as="sourcePoint"/>
+                        <mxPoint x="270" y="290" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc6" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=16;" parent="1" source="doctor-actor" target="uc-manage-patients" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="360" as="sourcePoint"/>
+                        <mxPoint x="270" y="310" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc7" style="endArrow=none;html=1;strokeColor=#9673a6;strokeWidth=1;fontSize=16;" parent="1" source="patient-actor" target="uc-login" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="380" as="sourcePoint"/>
+                        <mxPoint x="270" y="330" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc8" style="endArrow=none;html=1;strokeColor=#9673a6;strokeWidth=1;fontSize=16;" parent="1" source="patient-actor" target="uc-select-doctor" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="600" as="sourcePoint"/>
+                        <mxPoint x="270" y="550" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc9" style="endArrow=none;html=1;strokeColor=#9673a6;strokeWidth=1;fontSize=16;" parent="1" source="patient-actor" target="uc-take-assessment" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="620" as="sourcePoint"/>
+                        <mxPoint x="270" y="570" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc10" style="endArrow=none;html=1;strokeColor=#9673a6;strokeWidth=1;fontSize=16;" parent="1" source="patient-actor" target="uc-view-diet" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="640" as="sourcePoint"/>
+                        <mxPoint x="270" y="590" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc11" style="endArrow=none;html=1;strokeColor=#9673a6;strokeWidth=1;fontSize=16;" parent="1" source="patient-actor" target="uc-view-doctor-info" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="660" as="sourcePoint"/>
+                        <mxPoint x="270" y="610" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc12" style="endArrow=none;html=1;strokeColor=#9673a6;strokeWidth=1;fontSize=16;" parent="1" source="patient-actor" target="uc-track-progress" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="680" as="sourcePoint"/>
+                        <mxPoint x="270" y="630" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc13" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=1;fontSize=16;" parent="1" source="system-actor" target="uc-analyze-dosha" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1180" y="500" as="sourcePoint"/>
+                        <mxPoint x="1130" y="450" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc14" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=1;fontSize=16;" parent="1" source="system-actor" target="uc-generate-plan" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1180" y="520" as="sourcePoint"/>
+                        <mxPoint x="1130" y="470" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc15" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=1;fontSize=16;" parent="1" source="system-actor" target="uc-export-pdf" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1180" y="540" as="sourcePoint"/>
+                        <mxPoint x="1130" y="490" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc16" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=1;fontSize=16;" parent="1" source="system-actor" target="uc-validate-data" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1180" y="560" as="sourcePoint"/>
+                        <mxPoint x="1130" y="510" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc17" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=1;fontSize=16;" parent="1" source="system-actor" target="uc-store-data" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1180" y="580" as="sourcePoint"/>
+                        <mxPoint x="1130" y="530" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc18" style="endArrow=none;html=1;strokeColor=#d6b656;strokeWidth=1;fontSize=16;" parent="1" source="system-actor" target="uc-send-notifications" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1180" y="600" as="sourcePoint"/>
+                        <mxPoint x="1130" y="550" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="include1" style="endArrow=open;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;endFill=0;fontSize=16;" parent="1" source="uc-create-diet" target="uc-validate-data" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="750" y="300" as="sourcePoint"/>
+                        <mxPoint x="800" y="250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="include2" style="endArrow=open;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;endFill=0;fontSize=16;" parent="1" source="uc-take-assessment" target="uc-analyze-dosha" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="640" y="500" as="sourcePoint"/>
+                        <mxPoint x="690" y="450" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="include3" style="endArrow=open;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;endFill=0;fontSize=16;" parent="1" source="uc-create-diet" target="uc-generate-plan" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="800" y="280" as="sourcePoint"/>
+                        <mxPoint x="850" y="230" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="extend1" style="endArrow=open;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;endFill=0;fontSize=16;" parent="1" source="uc-export-pdf" target="uc-view-diet" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="920" y="580" as="sourcePoint"/>
+                        <mxPoint x="800" y="480" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="3" value="" style="endArrow=none;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=16;" edge="1" parent="1" source="doctor-actor" target="uc-check-assessment">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="210" y="308" as="sourcePoint"/>
+                        <mxPoint x="830" y="273" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uc-check-assessment" value="Check Patient&#xa;Assessment Status" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="295" width="140" height="70" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

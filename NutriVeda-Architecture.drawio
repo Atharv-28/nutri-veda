@@ -1,0 +1,73 @@
+<mxfile host="65bd71144e">
+    <diagram name="Architecture" id="arch1">
+        <mxGraphModel dx="825" dy="445" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="1200" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="input-layer" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;INPUT LAYER&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=16;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="100" y="120" width="800" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="doctor-module" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;👨‍⚕️ Doctor Module&lt;br&gt;• Patient Profile Input&lt;br&gt;• Diagnosis &amp;amp; Assessment&lt;br&gt;• Medical History&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="150" y="180" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="patient-module" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;🧍 Patient Preferences&lt;br&gt;• Diet Type Selection&lt;br&gt;• Food Restrictions&lt;br&gt;• Lifestyle Factors&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="550" y="180" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="processing-layer" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;PROCESSING LAYER&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="100" y="320" width="800" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="database-module" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;🗂️ Food Database&lt;br&gt;• Nutritional Data&lt;br&gt;• Ayurvedic Properties&lt;br&gt;• Food Categories&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="150" y="380" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="engine-module" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;⚙️ Rule-Based Engine&lt;br&gt;• Dosha Logic Processing&lt;br&gt;• Nutrient Balancing&lt;br&gt;• Personalization Rules&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="550" y="380" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="output-layer" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;OUTPUT LAYER&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="100" y="520" width="800" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="chart-module" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;📄 Auto Diet Chart&lt;br&gt;• Personalized Meal Plans&lt;br&gt;• Dosha-based Recommendations&lt;br&gt;• Nutritional Balance&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="150" y="580" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="export-module" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;📤 Export Options&lt;br&gt;• PDF Generation&lt;br&gt;• Mobile App View&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2" parent="1" vertex="1">
+                    <mxGeometry x="550" y="580" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow1" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#82b366" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="300" y="280" as="sourcePoint"/>
+                        <mxPoint x="300" y="380" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow2" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#82b366" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="700" y="280" as="sourcePoint"/>
+                        <mxPoint x="700" y="380" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow3" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d6b656" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="300" y="480" as="sourcePoint"/>
+                        <mxPoint x="300" y="580" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow4" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d6b656" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="700" y="480" as="sourcePoint"/>
+                        <mxPoint x="700" y="580" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="connection" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#999999;dashed=1" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="450" y="430" as="sourcePoint"/>
+                        <mxPoint x="550" y="430" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="connection2" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#999999;dashed=1" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="450" y="630" as="sourcePoint"/>
+                        <mxPoint x="550" y="630" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

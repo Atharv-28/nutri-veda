@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 
-// Import screens
+// screens
 import LoginScreen from './src/screens/LoginScreen';
 import SelectDoctorScreen from './src/screens/SelectDoctorScreen';
 import DoctorDashboardScreen from './src/screens/DoctorDashboardScreen';
