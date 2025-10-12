@@ -10,6 +10,9 @@ import DoctorDashboardScreen from './src/screens/DoctorDashboardScreen';
 import PatientDashboardScreen from './src/screens/PatientDashboardScreen';
 import PrakrutiTestScreen from './src/screens/PrakrutiTestScreen';
 import DietPlanScreen from './src/screens/DietPlanScreen';
+import DoctorLoginScreen from './src/screens/DoctorLoginScreen';
+import PatientLoginScreen from './src/screens/PatientLoginScreen';
+import CreateAccountScreen from './src/screens/CreateAccountScreen';
 
 const Stack = createStackNavigator();
 
@@ -24,6 +27,9 @@ export default function App() {
         initialRouteName="Login"
       >
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="DoctorLogin" component={DoctorLoginScreen} />
+        <Stack.Screen name="PatientLogin" component={PatientLoginScreen} />
+        <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
         <Stack.Screen name="SelectDoctor" component={SelectDoctorScreen} />
         <Stack.Screen name="DoctorDashboard" component={DoctorDashboardScreen} />
         <Stack.Screen name="PatientDashboard" component={PatientDashboardScreen} />

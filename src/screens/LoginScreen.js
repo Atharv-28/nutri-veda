@@ -12,39 +12,16 @@ import { Ionicons } from '@expo/vector-icons';
 const LoginScreen = ({ navigation }) => {
   const [userType, setUserType] = useState(null);
 
-  // Mock user data for demo
-  const mockUsers = {
-    doctors: [
-      { id: 1, name: 'Dr. Rajesh Sharma', specialization: 'Ayurveda', experience: '15 years' },
-      { id: 2, name: 'Dr. Priya Patel', specialization: 'Nutrition', experience: '12 years' },
-      { id: 3, name: 'Dr. Amit Gupta', specialization: 'Panchakarma', experience: '20 years' },
-    ],
-    patients: [
-      { id: 1, name: 'Ravi Kumar', age: 35, doctorId: 1 },
-      { id: 2, name: 'Priya Singh', age: 28, doctorId: 2 },
-      { id: 3, name: 'Amit Joshi', age: 42, doctorId: null }, // No doctor assigned
-    ]
-  };
-
-  const handleLogin = () => {
+  const handleContinue = () => {
     if (!userType) {
       Alert.alert('Error', 'Please select user type (Doctor or Patient)');
       return;
     }
 
-    // For demo purposes, use the first user of selected type
     if (userType === 'doctor') {
-      const doctor = mockUsers.doctors[0]; // Use first doctor for demo
-      navigation.navigate('DoctorDashboard', { doctor });
+      navigation.navigate('DoctorLogin');
     } else {
-      const patient = mockUsers.patients[2]; // Use patient without doctor for demo
-      if (!patient.doctorId) {
-        // Patient needs to select a doctor first
-        navigation.navigate('SelectDoctor', { patient });
-      } else {
-        const doctor = mockUsers.doctors.find(d => d.id === patient.doctorId);
-        navigation.navigate('PatientDashboard', { patient, doctor });
-      }
+      navigation.navigate('PatientLogin');
     }
   };
 
@@ -57,7 +34,10 @@ const LoginScreen = ({ navigation }) => {
           styles.userTypeButton,
           userType === 'doctor' && styles.selectedUserType
         ]}
-        onPress={() => setUserType('doctor')}
+        onPress={() => {
+          setUserType('doctor');
+          navigation.navigate('DoctorLogin');
+        }}
       >
         <Ionicons 
           name="medical" 
@@ -83,7 +63,10 @@ const LoginScreen = ({ navigation }) => {
           styles.userTypeButton,
           userType === 'patient' && styles.selectedUserType
         ]}
-        onPress={() => setUserType('patient')}
+        onPress={() => {
+          setUserType('patient');
+          navigation.navigate('PatientLogin');
+        }}
       >
         <Ionicons 
           name="person" 
@@ -105,24 +88,12 @@ const LoginScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       {userType && (
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <TouchableOpacity style={styles.loginButton} onPress={handleContinue}>
           <Text style={styles.loginButtonText}>
             Continue as {userType === 'doctor' ? 'Doctor' : 'Patient'}
           </Text>
         </TouchableOpacity>
       )}
-
-      <View style={styles.demoContainer}>
-        <Text style={styles.demoTitle}>🎯 Demo Mode</Text>
-        <Text style={styles.demoText}>
-          {userType === 'doctor' 
-            ? 'Login as Dr. Rajesh Sharma to manage patients and create diet plans'
-            : userType === 'patient'
-            ? 'Login as Amit Joshi - you will need to select a doctor first'
-            : 'Select Doctor or Patient to continue with the demo'
-          }
-        </Text>
-      </View>
     </View>
   );
 
