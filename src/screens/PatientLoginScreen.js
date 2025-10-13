@@ -54,7 +54,7 @@ const PatientLoginScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('CreateAccount')}>
+        <TouchableOpacity onPress={() => navigation.navigate('PatientCreateAccount')}>
           <Text style={styles.link}>Create an account</Text>
         </TouchableOpacity>
       </View>
