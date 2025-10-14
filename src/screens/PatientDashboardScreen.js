@@ -11,7 +11,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 const PatientDashboardScreen = ({ route, navigation }) => {
-  const { patient, doctor } = route.params;
+  const { patient, doctor } = route.params || {};
+  
+  const patientName = patient?.name || 'Patient';
 
   // Mock patient diet plan data
   const patientData = {
@@ -68,25 +70,40 @@ const PatientDashboardScreen = ({ route, navigation }) => {
     return doshaInfo[dosha] || { color: '#666', title: 'Unknown Constitution' };
   };
 
-  const renderDoctorInfo = () => (
-    <View style={styles.doctorCard}>
-      <Text style={styles.cardTitle}>Your Doctor</Text>
-      <View style={styles.doctorInfo}>
-        <View style={styles.doctorAvatar}>
-          <Ionicons name="medical" size={30} color="#667eea" />
+  const renderDoctorInfo = () => {
+    if (!doctor) {
+      return (
+        <View style={styles.doctorCard}>
+          <Text style={styles.cardTitle}>Your Doctor</Text>
+          <Text style={{ marginBottom: 12, color: '#666' }}>No doctor assigned yet.</Text>
+          <TouchableOpacity style={styles.contactButton} onPress={() => navigation.navigate('SelectDoctor')}>
+            <Ionicons name="person-add" size={16} color="#667eea" />
+            <Text style={styles.contactText}>Select a Doctor</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.doctorDetails}>
-          <Text style={styles.doctorName}>{doctor.name}</Text>
-          <Text style={styles.doctorSpecialization}>{doctor.specialization}</Text>
-          <Text style={styles.doctorExperience}>{doctor.experience} experience</Text>
+      );
+    }
+
+    return (
+      <View style={styles.doctorCard}>
+        <Text style={styles.cardTitle}>Your Doctor</Text>
+        <View style={styles.doctorInfo}>
+          <View style={styles.doctorAvatar}>
+            <Ionicons name="medical" size={30} color="#667eea" />
+          </View>
+          <View style={styles.doctorDetails}>
+            <Text style={styles.doctorName}>{doctor.name}</Text>
+            <Text style={styles.doctorSpecialization}>{doctor.specialization || ''}</Text>
+            <Text style={styles.doctorExperience}>{doctor.yearsExperience || doctor.experience || ''} experience</Text>
+          </View>
         </View>
+        <TouchableOpacity style={styles.contactButton}>
+          <Ionicons name="call" size={16} color="#667eea" />
+          <Text style={styles.contactText}>Contact Doctor</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.contactButton}>
-        <Ionicons name="call" size={16} color="#667eea" />
-        <Text style={styles.contactText}>Contact Doctor</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   const renderHealthOverview = () => (
     <View style={styles.overviewCard}>
@@ -201,7 +218,7 @@ const PatientDashboardScreen = ({ route, navigation }) => {
       <View style={styles.header}>
         <View style={styles.patientInfo}>
           <Text style={styles.welcomeText}>Welcome back</Text>
-          <Text style={styles.patientName}>{patient.name}</Text>
+          <Text style={styles.patientName}>{patientName}</Text>
         </View>
         <TouchableOpacity 
           style={styles.logoutButton}

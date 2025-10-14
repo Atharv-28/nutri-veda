@@ -8,12 +8,8 @@ const DoctorLoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    if (!username || !password) {
-      Alert.alert('Error', 'Please enter username and password');
-      return;
-    }
-    // Demo: navigate to doctor dashboard with mock doctor data
-    const doctor = { id: 1, name: 'Dr. Rajesh Sharma', specialization: 'Ayurveda' };
+    // Demo: accept any input (including empty) and navigate to doctor dashboard
+    const doctor = { id: Math.floor(Math.random() * 10000), name: username || 'Dr. Demo', specialization: 'Ayurveda' };
     navigation.navigate('DoctorDashboard', { doctor });
   };
 

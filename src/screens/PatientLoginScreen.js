@@ -8,14 +8,16 @@ const PatientLoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
-    if (!username || !password) {
-      Alert.alert('Error', 'Please enter username and password');
-      return;
-    }
-    // Demo: navigate to patient dashboard with mock patient data
-    const patient = { id: 3, name: 'Amit Joshi', age: 42 };
+    // Demo: accept any input (including empty) and navigate to patient dashboard
+    const patient = { id: Math.floor(Math.random() * 10000), name: username || 'Demo Patient', age: ageFromUsername(username) };
     const doctor = null;
     navigation.navigate('PatientDashboard', { patient, doctor });
+  };
+
+  // small helper: derive a pseudo-age from username for demo display
+  const ageFromUsername = (u) => {
+    if (!u) return 30;
+    return Math.min(80, Math.max(16, (u.length * 3) % 60));
   };
 
   return (
