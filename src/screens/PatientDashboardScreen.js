@@ -404,9 +404,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 10,
-    borderBottomWidth: 0,
     borderWidth: 2,
     borderColor: '#667eea',
+    borderBottomWidth: 1,
+    borderBottomColor: '#667eea',
+    alignSelf: 'stretch',
   },
   completedAssessment: {
     flexDirection: 'row',

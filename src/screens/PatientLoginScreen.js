@@ -70,7 +70,7 @@ const PatientLoginScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   wrapper: { flex: 1, paddingHorizontal: 20 },
-  header: { alignItems: 'center', paddingTop: 80, paddingBottom: 20 },
+  header: { alignItems: 'center', paddingTop: 30, paddingBottom: 20 },
   backButton: { position: 'absolute', left: 12, top: 48, padding: 6 },
   appTitle: { color: 'white', fontSize: 32, fontWeight: '700' },
   appSubtitle: { color: 'rgba(255,255,255,0.9)', fontSize: 14, marginTop: 6 },
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 16,
     padding: 22,
-    marginTop: 20,
+    marginTop: 80,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
