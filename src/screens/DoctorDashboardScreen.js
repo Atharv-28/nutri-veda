@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    paddingTop: 50,
+    paddingTop: 20,
   },
   doctorInfo: {
     flex: 1,
