@@ -53,7 +53,8 @@ const PatientDashboardScreen = ({ route, navigation }) => {
           onPress: () => navigation.navigate('PrakrutiTest', { 
             patient,
             doctor,
-            fromPatientDashboard: true 
+            fromPatientDashboard: true,
+            role: 'patient'
           })
         },
         { text: 'Cancel' }

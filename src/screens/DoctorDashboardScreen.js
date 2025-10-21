@@ -57,7 +57,8 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
             onPress: () => navigation.navigate('PrakrutiTest', { 
               patient,
               doctor,
-              isForPatient: true 
+              isForPatient: true,
+              role: 'doctor'
             })
           },
           { text: 'Cancel' }
