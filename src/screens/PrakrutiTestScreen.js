@@ -85,22 +85,48 @@ const questions = [
   }
 ];
 
-const PrakrutiTestScreen = ({ navigation }) => {
+const PrakrutiTestScreen = ({ navigation, route }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
 
   const handleAnswer = (option) => {
-    const newAnswers = {
-      ...answers,
-      [currentQuestion]: option
-    };
+    const newAnswers = { ...answers, [currentQuestion]: option };
     setAnswers(newAnswers);
-
+    // user will navigate with Next/Previous buttons
+  };
+  
+  const handleNext = () => {
+    if (!answers[currentQuestion]) {
+      Alert.alert('Please select an option', 'Choose an option before proceeding to the next question.');
+      return;
+    }
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      calculateResult(newAnswers);
+      calculateResult(answers);
+    }
+  };
+  
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  // Navigate to the correct dashboard depending on the logged-in role.
+  // Role can be passed via route.params.role or older navigation.getParam('role').
+  const handleGoToDashboard = () => {
+    const roleFromRoute = route?.params?.role || (navigation.getParam ? navigation.getParam('role') : null);
+    if (roleFromRoute === 'doctor') {
+      navigation.navigate('DoctorDashboard');
+      return;
+    }
+    if (roleFromRoute === 'patient') {
+      navigation.navigate('PatientDashboard');
+      return;
     }
   };
 
@@ -120,27 +146,9 @@ const PrakrutiTestScreen = ({ navigation }) => {
 
   const getDoshaDescription = (dosha) => {
     const descriptions = {
-      vata: {
-        title: "Vata Dominant",
-        description: "You are creative, energetic, and adaptable. Focus on warm, grounding foods and regular routines.",
-        color: "#8E44AD",
-        foods: "Warm, cooked foods, sweet fruits, nuts, dairy products",
-        avoid: "Cold, dry, raw foods, excessive caffeine"
-      },
-      pitta: {
-        title: "Pitta Dominant", 
-        description: "You are focused, intelligent, and goal-oriented. Choose cooling foods and avoid excessive heat.",
-        color: "#E74C3C",
-        foods: "Cool, sweet foods, leafy greens, coconut, melons",
-        avoid: "Spicy, sour, salty foods, excessive heat"
-      },
-      kapha: {
-        title: "Kapha Dominant",
-        description: "You are calm, stable, and nurturing. Light, warm, spicy foods will energize you.",
-        color: "#27AE60",
-        foods: "Light, warm, spicy foods, vegetables, legumes",
-        avoid: "Heavy, oily, sweet, cold foods"
-      }
+      vata: { title: 'Vata Dominant', description: 'Vata traits', color: '#8E44AD', foods: '', avoid: '' },
+      pitta: { title: 'Pitta Dominant', description: 'Pitta traits', color: '#E74C3C', foods: '', avoid: '' },
+      kapha: { title: 'Kapha Dominant', description: 'Kapha traits', color: '#27AE60', foods: '', avoid: '' }
     };
     return descriptions[dosha];
   };
@@ -149,6 +157,25 @@ const PrakrutiTestScreen = ({ navigation }) => {
     setCurrentQuestion(0);
     setAnswers({});
     setShowResult(false);
+  };
+
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  const handleCancelTest = () => {
+    Alert.alert(
+      'Cancel Assessment',
+      'Are you sure you want to cancel the assessment? Your progress will be lost.',
+      [
+        { text: 'No' },
+        { text: 'Yes', style: 'destructive', onPress: () => {
+            resetTest();
+            navigation.goBack();
+          }
+        }
+      ]
+    );
   };
 
   if (showResult) {
@@ -195,6 +222,13 @@ const PrakrutiTestScreen = ({ navigation }) => {
             >
               <Text style={styles.buttonText}>Get Diet Plan</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.goHomeButton}
+              onPress={handleGoToDashboard}
+            >
+              <Text style={styles.buttonText}>Go to Dashboard</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </LinearGradient>
@@ -203,19 +237,29 @@ const PrakrutiTestScreen = ({ navigation }) => {
 
   return (
     <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Prakruti Assessment</Text>
-        <Text style={styles.progressText}>
-          Question {currentQuestion + 1} of {questions.length}
-        </Text>
-        <View style={styles.progressBar}>
-          <View 
-            style={[
-              styles.progressFill, 
-              { width: `${((currentQuestion + 1) / questions.length) * 100}%` }
-            ]} 
-          />
+      <View style={[styles.header, styles.headerRow]}>
+        <TouchableOpacity onPress={handleGoBack} style={styles.headerButton}>
+          <Ionicons name="arrow-back" size={22} color="white" />
+        </TouchableOpacity>
+
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={styles.headerTitle}>Prakruti Assessment</Text>
+          <Text style={styles.progressText}>
+            Question {currentQuestion + 1} of {questions.length}
+          </Text>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${((currentQuestion + 1) / questions.length) * 100}%` }
+              ]} 
+            />
+          </View>
         </View>
+
+        <TouchableOpacity onPress={handleCancelTest} style={styles.headerButton}>
+          <Text style={styles.cancelText}>Cancel</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -228,12 +272,23 @@ const PrakrutiTestScreen = ({ navigation }) => {
             {questions[currentQuestion].options.map((option, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.optionButton}
+                style={[
+                  styles.optionButton,
+                  answers[currentQuestion] && answers[currentQuestion].text === option.text ? styles.optionSelected : null
+                ]}
                 onPress={() => handleAnswer(option)}
               >
                 <Text style={styles.optionText}>{option.text}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+          <View style={styles.navButtonsRow}>
+            <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
+              <Text style={styles.navButtonText}>Previous</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.navButton, !answers[currentQuestion] ? styles.navButtonDisabled : null]} onPress={handleNext}>
+              <Text style={styles.navButtonText}>{currentQuestion < questions.length - 1 ? 'Next' : 'Finish'}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -246,9 +301,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 20,
-    paddingTop: 50,
+    padding: 12,
+    paddingTop: 16,
   },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerButton: { padding: 8 },
+  cancelText: { color: 'rgba(255,255,255,0.9)', fontSize: 16 },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -303,10 +361,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
-  optionText: {
-    fontSize: 16,
-    color: '#495057',
-    textAlign: 'center',
+  optionSelected: {
+    backgroundColor: '#e9eefc',
+    borderColor: '#667eea',
+  },
+  navButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    gap: 12,
+  },
+  navButton: {
+    flex: 1,
+    backgroundColor: '#667eea',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  navButtonDisabled: {
+    backgroundColor: '#bfc6ff',
+  },
+  navButtonText: {
+    color: 'white',
+    fontWeight: '700',
   },
   resultCard: {
     backgroundColor: 'white',
@@ -385,6 +462,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 25,
+  },
+  goHomeButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 10,
+    marginBottom: 10,
   },
   buttonText: {
     color: 'white',
