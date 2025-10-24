@@ -7,11 +7,13 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { createAccount } from "../services/authService";
 
 const CreateAccountPatient = ({ navigation }) => {
   // Common fields
@@ -36,6 +38,7 @@ const CreateAccountPatient = ({ navigation }) => {
   const [dietaryPreference, setDietaryPreference] = useState(""); // Veg / Vegan / Non-Veg / Satvik
   const [address, setAddress] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (dob) {
@@ -73,7 +76,7 @@ const CreateAccountPatient = ({ navigation }) => {
     setDob(formatDate(current));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     // Basic validation
     if (!fullName || !email || !mobile || !password || !confirmPassword) {
       Alert.alert(
@@ -86,15 +89,24 @@ const CreateAccountPatient = ({ navigation }) => {
       Alert.alert("Error", "Passwords do not match");
       return;
     }
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
+      return;
+    }
 
-    // Build demo patient object
-    const patient = {
-      id: Math.floor(Math.random() * 10000),
+    setLoading(true);
+
+    // Build patient data object
+    const patientData = {
       name: fullName,
-      email,
+      fullName: fullName,
+      email: email.trim().toLowerCase(),
       mobile,
-      age: age || null,
+      password, // Will be used for Firebase auth, not stored in Firestore
+      role: 'patient',
+      gender: gender || null,
       dob: dob || null,
+      age: age || null,
       height: height || null,
       weight: weight || null,
       bloodGroup: bloodGroup || null,
@@ -109,13 +121,29 @@ const CreateAccountPatient = ({ navigation }) => {
       profilePhoto: profilePhoto || null,
     };
 
-    Alert.alert(
-      "Account Created",
-      "Patient account created (demo)\n" + JSON.stringify(patient, null, 2)
-    );
-    navigation.navigate("PatientLogin");
+    try {
+      const result = await createAccount(patientData);
+      
+      setLoading(false);
 
-    // In real app: send patient object to backend / persist locally
+      if (result.success) {
+        Alert.alert(
+          "Success",
+          "Patient account created successfully!",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("PatientLogin")
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Error", result.error || "Failed to create account");
+      }
+    } catch (error) {
+      setLoading(false);
+      Alert.alert("Error", "An unexpected error occurred");
+    }
   };
 
   const handleUploadPhoto = () => {
@@ -310,8 +338,16 @@ const CreateAccountPatient = ({ navigation }) => {
             keyboardType="phone-pad"
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleCreate}>
-            <Text style={styles.buttonText}>Create Account</Text>
+          <TouchableOpacity 
+            style={styles.button} 
+            onPress={handleCreate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Create Account</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

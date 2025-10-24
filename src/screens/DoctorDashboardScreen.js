@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { signOutUser } from '../services/authService';
 
 const DoctorDashboardScreen = ({ route, navigation }) => {
   const { doctor } = route.params;
@@ -141,6 +142,31 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
     return colors[dosha] || '#666';
   };
 
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await signOutUser();
+            if (result.success) {
+              navigation.navigate('Login');
+            } else {
+              Alert.alert('Error', 'Failed to logout');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderStats = () => (
     <View style={styles.statsContainer}>
       <View style={styles.statCard}>
@@ -171,7 +197,7 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
         </View>
         <TouchableOpacity 
           style={styles.logoutButton}
-          onPress={() => navigation.navigate('Login')}
+          onPress={handleLogout}
         >
           <Ionicons name="log-out" size={24} color="white" />
         </TouchableOpacity>

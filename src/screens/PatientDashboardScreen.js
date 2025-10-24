@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { signOutUser } from '../services/authService';
 
 const PatientDashboardScreen = ({ route, navigation }) => {
   const { patient, doctor } = route.params || {};
@@ -69,6 +70,31 @@ const PatientDashboardScreen = ({ route, navigation }) => {
       kapha: { color: '#27AE60', title: 'Kapha Constitution' }
     };
     return doshaInfo[dosha] || { color: '#666', title: 'Unknown Constitution' };
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await signOutUser();
+            if (result.success) {
+              navigation.navigate('Login');
+            } else {
+              Alert.alert('Error', 'Failed to logout');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderDoctorInfo = () => {
@@ -223,7 +249,7 @@ const PatientDashboardScreen = ({ route, navigation }) => {
         </View>
         <TouchableOpacity 
           style={styles.logoutButton}
-          onPress={() => navigation.navigate('Login')}
+          onPress={handleLogout}
         >
           <Ionicons name="log-out" size={24} color="white" />
         </TouchableOpacity>

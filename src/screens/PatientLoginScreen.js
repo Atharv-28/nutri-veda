@@ -1,23 +1,40 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { signIn } from '../services/authService';
 
 const PatientLoginScreen = ({ navigation }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Demo: accept any input (including empty) and navigate to patient dashboard
-    const patient = { id: Math.floor(Math.random() * 10000), name: username || 'Demo Patient', age: ageFromUsername(username) };
-    const doctor = null;
-    navigation.navigate('PatientDashboard', { patient, doctor });
-  };
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
 
-  // small helper: derive a pseudo-age from username for demo display
-  const ageFromUsername = (u) => {
-    if (!u) return 30;
-    return Math.min(80, Math.max(16, (u.length * 3) % 60));
+    setLoading(true);
+
+    try {
+      const result = await signIn(email.trim().toLowerCase(), password, 'patient');
+      
+      setLoading(false);
+
+      if (result.success) {
+        // Navigate to patient dashboard with user data
+        navigation.navigate('PatientDashboard', { 
+          patient: result.user,
+          doctor: null 
+        });
+      } else {
+        Alert.alert('Login Failed', result.error || 'Invalid credentials');
+      }
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', 'An unexpected error occurred');
+    }
   };
 
   return (
@@ -36,11 +53,12 @@ const PatientLoginScreen = ({ navigation }) => {
 
         <TextInput
           style={styles.input}
-          placeholder="Username"
+          placeholder="Email"
           placeholderTextColor="#9aa0c4"
-          value={username}
-          onChangeText={setUsername}
+          value={email}
+          onChangeText={setEmail}
           autoCapitalize="none"
+          keyboardType="email-address"
         />
 
         <TextInput
@@ -52,8 +70,16 @@ const PatientLoginScreen = ({ navigation }) => {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>Login</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('PatientCreateAccount')}>

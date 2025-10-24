@@ -7,11 +7,13 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { createAccount } from "../services/authService";
 
 const CreateAccountDoctor = ({ navigation }) => {
   // Common fields
@@ -36,6 +38,7 @@ const CreateAccountDoctor = ({ navigation }) => {
   const [address, setAddress] = useState("");
   const [availability, setAvailability] = useState("");
   const [documentsUploaded, setDocumentsUploaded] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (dob) {
@@ -81,7 +84,7 @@ const CreateAccountDoctor = ({ navigation }) => {
     setDocumentsUploaded(true);
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     // Basic validation for required fields
     if (!fullName || !email || !mobile || !password || !confirmPassword) {
       Alert.alert(
@@ -92,6 +95,10 @@ const CreateAccountDoctor = ({ navigation }) => {
     }
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
     // Doctor-specific minimal validation
@@ -108,11 +115,15 @@ const CreateAccountDoctor = ({ navigation }) => {
       return;
     }
 
-    const doctor = {
-      id: Math.floor(Math.random() * 10000),
+    setLoading(true);
+
+    const doctorData = {
       name: fullName,
-      email,
+      fullName: fullName,
+      email: email.trim().toLowerCase(),
       mobile,
+      password, // Will be used for Firebase auth, not stored in Firestore
+      role: 'doctor',
       age: age || null,
       dob: dob || null,
       gender: gender || null,
@@ -121,6 +132,7 @@ const CreateAccountDoctor = ({ navigation }) => {
       qualification,
       specialization,
       yearsExperience,
+      experience: yearsExperience + ' years', // formatted for display
       clinicName: clinicName || null,
       consultationFees: consultationFees || null,
       address: address || null,
@@ -128,11 +140,29 @@ const CreateAccountDoctor = ({ navigation }) => {
       documentsUploaded,
     };
 
-    Alert.alert(
-      "Account Created",
-      "Doctor account created (demo)\n" + JSON.stringify(doctor, null, 2)
-    );
-    navigation.navigate("DoctorLogin");
+    try {
+      const result = await createAccount(doctorData);
+      
+      setLoading(false);
+
+      if (result.success) {
+        Alert.alert(
+          "Success",
+          "Doctor account created successfully!",
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("DoctorLogin")
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Error", result.error || "Failed to create account");
+      }
+    } catch (error) {
+      setLoading(false);
+      Alert.alert("Error", "An unexpected error occurred");
+    }
   };
 
   return (
@@ -309,8 +339,16 @@ const CreateAccountDoctor = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={handleCreate}>
-            <Text style={styles.buttonText}>Create Account</Text>
+          <TouchableOpacity 
+            style={styles.button} 
+            onPress={handleCreate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Create Account</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
