@@ -95,12 +95,47 @@ export const signIn = async (email, password, role) => {
 
     if (cachedUserJson) {
       const cachedUser = JSON.parse(cachedUserJson);
-      // If cached user matches current login, use it immediately
+      // ✅ SECURITY: Only use cache if BOTH uid AND role match
+      // This prevents using a cached doctor account to login as patient (or vice versa)
       if (cachedUser.uid === user.uid && cachedUser.role === role) {
         console.log('✅ Using cached user data (fast login)');
+        
+        // Periodically verify against Firestore (every 10th login or if cache is old)
+        const cacheAge = cachedUser.lastVerified ? Date.now() - new Date(cachedUser.lastVerified).getTime() : Infinity;
+        const shouldVerify = !cachedUser.lastVerified || cacheAge > 24 * 60 * 60 * 1000; // 24 hours
+        
+        if (shouldVerify) {
+          console.log('🔄 Cache verification needed, will verify in background...');
+          // Verify in background, don't block login
+          setTimeout(async () => {
+            try {
+              const collection = role === 'doctor' ? 'doctors' : 'patients';
+              const userDoc = await getDoc(doc(db, collection, user.uid));
+              if (userDoc.exists() && userDoc.data().role === role) {
+                const updatedUser = { ...userDoc.data(), lastVerified: new Date().toISOString() };
+                await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+                console.log('✅ Cache verified and updated');
+              } else {
+                console.log('⚠️ Cache invalid, clearing...');
+                await AsyncStorage.removeItem('user');
+              }
+            } catch (err) {
+              console.log('Background verification failed:', err.message);
+            }
+          }, 1000);
+        }
+        
         return {
           success: true,
           user: cachedUser
+        };
+      } else if (cachedUser.uid === user.uid && cachedUser.role !== role) {
+        // ❌ SECURITY: User is trying to login with same account but different role
+        console.log('❌ Role mismatch in cache');
+        await firebaseSignOut(auth);
+        return {
+          success: false,
+          error: `This account is registered as a ${cachedUser.role}, not a ${role}. Please use the ${cachedUser.role} login.`
         };
       }
     }
@@ -134,35 +169,57 @@ export const signIn = async (email, password, role) => {
           };
         }
       } else {
-        console.log('⚠️ No Firestore document found, using fallback');
-        userData = {
-          uid: user.uid,
-          email: user.email,
-          role: role,
-          name: email.split('@')[0],
-          fullName: email.split('@')[0]
+        // ❌ CRITICAL: Document doesn't exist in this collection
+        // User is trying to login with wrong role
+        console.log('❌ No document found in', collection);
+        await firebaseSignOut(auth);
+        
+        // Try to find the user in the opposite collection to give better error message
+        const oppositeCollection = role === 'doctor' ? 'patients' : 'doctors';
+        try {
+          const oppositeDoc = await getDoc(doc(db, oppositeCollection, user.uid));
+          if (oppositeDoc.exists()) {
+            const oppositeRole = oppositeDoc.data().role;
+            return {
+              success: false,
+              error: `This account is registered as a ${oppositeRole}, not a ${role}. Please use the ${oppositeRole} login.`
+            };
+          }
+        } catch (err) {
+          console.log('Could not check opposite collection:', err.message);
+        }
+        
+        // Account doesn't exist in either collection
+        return {
+          success: false,
+          error: `No ${role} account found with this email. Please register first.`
         };
       }
 
     } catch (firestoreError) {
-      console.log('⚠️ Firestore unavailable, using fallback data');
-      // Fallback: create minimal user data from auth
-      userData = {
-        uid: user.uid,
-        email: user.email,
-        role: role,
-        name: email.split('@')[0],
-        fullName: email.split('@')[0]
+      console.log('⚠️ Firestore error:', firestoreError.message);
+      
+      // ❌ CRITICAL: Don't allow login if we can't verify role
+      // This is a security issue - we must verify the user is in the correct collection
+      await firebaseSignOut(auth);
+      
+      return {
+        success: false,
+        error: 'Unable to verify account. Please check your internet connection and try again.'
       };
     }
 
-    // Store locally for next time
-    await AsyncStorage.setItem('user', JSON.stringify(userData));
+    // Store locally for next time with verification timestamp
+    const userDataWithTimestamp = {
+      ...userData,
+      lastVerified: new Date().toISOString()
+    };
+    await AsyncStorage.setItem('user', JSON.stringify(userDataWithTimestamp));
     console.log('✅ Login complete');
 
     return {
       success: true,
-      user: userData
+      user: userDataWithTimestamp
     };
 
   } catch (error) {
