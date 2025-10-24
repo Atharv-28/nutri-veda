@@ -77,7 +77,7 @@ const PatientDashboardScreen = ({ route, navigation }) => {
         <View style={styles.doctorCard}>
           <Text style={styles.cardTitle}>Your Doctor</Text>
           <Text style={{ marginBottom: 12, color: '#666' }}>No doctor assigned yet.</Text>
-          <TouchableOpacity style={styles.contactButton} onPress={() => navigation.navigate('SelectDoctor')}>
+          <TouchableOpacity style={styles.contactButton} onPress={() => navigation.navigate('SelectDoctor', { patient })}>
             <Ionicons name="person-add" size={16} color="#667eea" />
             <Text style={styles.contactText}>Select a Doctor</Text>
           </TouchableOpacity>
