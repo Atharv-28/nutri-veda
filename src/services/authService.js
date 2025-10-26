@@ -16,12 +16,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const createAccount = async (userData) => {
   try {
     const { email, password, role, ...profileData } = userData;
-    console.log('🔐 Creating new account...');
 
     // Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    console.log('✅ Firebase Auth account created');
 
     // Update display name if provided
     if (profileData.name || profileData.fullName) {
@@ -30,7 +28,7 @@ export const createAccount = async (userData) => {
           displayName: profileData.name || profileData.fullName
         });
       } catch (error) {
-        console.log('⚠️ Could not update display name:', error.message);
+        alert('⚠️ Could not update display name:', error.message);
       }
     }
 
@@ -45,11 +43,9 @@ export const createAccount = async (userData) => {
 
     // Store locally first (immediate)
     await AsyncStorage.setItem('user', JSON.stringify(userDataToStore));
-    console.log('✅ User data saved locally');
 
     // Try to store in Firestore with timeout (background, don't block)
     const collection = role === 'doctor' ? 'doctors' : 'patients';
-    console.log(`📡 Attempting to save to Firestore (${collection})...`);
     
     // Don't await this - let it happen in background
     Promise.race([

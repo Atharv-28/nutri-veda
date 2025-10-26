@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,38 +6,71 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { signOutUser } from '../services/authService';
+import { getPatientDoctor } from '../services/relationshipService';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 
 const PatientDashboardScreen = ({ route, navigation }) => {
-  const { patient, doctor } = route.params || {};
+  const { patient: initialPatient, doctor: initialDoctor } = route.params || {};
   
-  const patientName = patient?.name || 'Patient';
+  const [patient, setPatient] = useState(initialPatient);
+  const [doctor, setDoctor] = useState(initialDoctor);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const patientName = patient?.fullName || patient?.name || 'Patient';
 
-  // Mock patient diet plan data
-  const patientData = {
-    dosha: null, // No assessment completed initially
-    hasCompletedAssessment: false, // Track if patient completed assessment
-    hasDietPlan: false, // Doctor hasn't created plan yet
-    lastUpdated: null,
-    nextAppointment: '2025-10-05',
-    progress: {
-      weight: '72 kg',
-      energy: 'Baseline',
-      digestion: 'Normal',
-      sleep: 'Average'
+  // Fetch patient data and assigned doctor on mount
+  useEffect(() => {
+    loadPatientData();
+  }, []);
+
+  const loadPatientData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch fresh patient data from Firestore
+      if (patient?.uid) {
+        const patientDoc = await getDoc(doc(db, 'patients', patient.uid));
+        if (patientDoc.exists()) {
+          const freshPatientData = { id: patientDoc.id, ...patientDoc.data() };
+          setPatient(freshPatientData);
+          
+          // Fetch assigned doctor if exists
+          if (freshPatientData.assignedDoctorId && !doctor) {
+            const result = await getPatientDoctor(patient.uid);
+            if (result.success && result.doctor) {
+              setDoctor(result.doctor);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading patient data:', error);
+      Alert.alert('Error', 'Failed to load patient data. Using cached data.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadPatientData();
+    setRefreshing(false);
+  };
+
   const handleViewDietPlan = () => {
-    if (!patientData.hasDietPlan) {
+    if (!patient?.hasDietPlan) {
       Alert.alert('No Diet Plan', 'Your doctor has not created a diet plan for you yet.');
       return;
     }
     navigation.navigate('DietPlan', { 
-      dosha: patientData.dosha,
+      dosha: patient.dosha,
       patient,
       doctor,
       readOnly: true
@@ -136,9 +169,9 @@ const PatientDashboardScreen = ({ route, navigation }) => {
     <View style={styles.overviewCard}>
       <Text style={styles.cardTitle}>Health Overview</Text>
       
-      {patientData.dosha && (
-        <View style={[styles.doshaIndicator, { backgroundColor: getDoshaInfo(patientData.dosha).color }]}>
-          <Text style={styles.doshaTitle}>{getDoshaInfo(patientData.dosha).title}</Text>
+      {patient?.dosha && (
+        <View style={[styles.doshaIndicator, { backgroundColor: getDoshaInfo(patient.dosha).color }]}>
+          <Text style={styles.doshaTitle}>{getDoshaInfo(patient.dosha).title}</Text>
         </View>
       )}
 
@@ -146,22 +179,22 @@ const PatientDashboardScreen = ({ route, navigation }) => {
         <View style={styles.progressItem}>
           <Ionicons name="scale" size={20} color="#667eea" />
           <Text style={styles.progressLabel}>Weight</Text>
-          <Text style={styles.progressValue}>{patientData.progress.weight}</Text>
+          <Text style={styles.progressValue}>{patient?.weight || 'Not set'}</Text>
         </View>
         <View style={styles.progressItem}>
           <Ionicons name="flash" size={20} color="#ffa500" />
           <Text style={styles.progressLabel}>Energy</Text>
-          <Text style={styles.progressValue}>{patientData.progress.energy}</Text>
+          <Text style={styles.progressValue}>{patient?.energyLevel || 'Baseline'}</Text>
         </View>
         <View style={styles.progressItem}>
           <Ionicons name="restaurant" size={20} color="#28a745" />
           <Text style={styles.progressLabel}>Digestion</Text>
-          <Text style={styles.progressValue}>{patientData.progress.digestion}</Text>
+          <Text style={styles.progressValue}>{patient?.digestionStatus || 'Normal'}</Text>
         </View>
         <View style={styles.progressItem}>
           <Ionicons name="bed" size={20} color="#8E44AD" />
           <Text style={styles.progressLabel}>Sleep</Text>
-          <Text style={styles.progressValue}>{patientData.progress.sleep}</Text>
+          <Text style={styles.progressValue}>{patient?.sleepQuality || 'Average'}</Text>
         </View>
       </View>
     </View>
@@ -171,7 +204,7 @@ const PatientDashboardScreen = ({ route, navigation }) => {
     <View style={styles.actionsCard}>
       <Text style={styles.cardTitle}>Quick Actions</Text>
       
-      {!patientData.hasCompletedAssessment ? (
+      {!patient?.hasCompletedAssessment ? (
         <TouchableOpacity 
           style={[styles.actionButton, styles.primaryAction]}
           onPress={handleTakePrakrutiTest}
@@ -190,7 +223,7 @@ const PatientDashboardScreen = ({ route, navigation }) => {
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Prakruti Assessment Complete</Text>
               <Text style={styles.actionSubtitle}>
-                Constitution: {patientData.dosha ? patientData.dosha.charAt(0).toUpperCase() + patientData.dosha.slice(1) : 'Unknown'}
+                Constitution: {patient.dosha ? patient.dosha.charAt(0).toUpperCase() + patient.dosha.slice(1) : 'Unknown'}
               </Text>
             </View>
           </View>
@@ -199,11 +232,11 @@ const PatientDashboardScreen = ({ route, navigation }) => {
             style={styles.actionButton}
             onPress={handleViewDietPlan}
           >
-            <Ionicons name="nutrition" size={24} color={patientData.hasDietPlan ? "#28a745" : "#ccc"} />
+            <Ionicons name="nutrition" size={24} color={patient?.hasDietPlan ? "#28a745" : "#ccc"} />
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>View Diet Plan</Text>
               <Text style={styles.actionSubtitle}>
-                {patientData.hasDietPlan 
+                {patient?.hasDietPlan 
                   ? 'Access your personalized plan' 
                   : 'Waiting for doctor to create your plan'
                 }
@@ -212,7 +245,7 @@ const PatientDashboardScreen = ({ route, navigation }) => {
             <Ionicons 
               name="chevron-forward" 
               size={20} 
-              color={patientData.hasDietPlan ? "#666" : "#ccc"} 
+              color={patient?.hasDietPlan ? "#666" : "#ccc"} 
             />
           </TouchableOpacity>
         </>
@@ -223,7 +256,7 @@ const PatientDashboardScreen = ({ route, navigation }) => {
         <View style={styles.actionContent}>
           <Text style={styles.actionTitle}>Next Appointment</Text>
           <Text style={styles.actionSubtitle}>
-            {patientData.nextAppointment ? patientData.nextAppointment : 'Not scheduled'}
+            {patient?.nextAppointment ? patient.nextAppointment : 'Not scheduled'}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#666" />
@@ -247,22 +280,38 @@ const PatientDashboardScreen = ({ route, navigation }) => {
           <Text style={styles.welcomeText}>Welcome back</Text>
           <Text style={styles.patientName}>{patientName}</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out" size={24} color="white" />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.refreshButton}
+            onPress={handleRefresh}
+            disabled={refreshing}
+          >
+            <Ionicons name="refresh" size={22} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView 
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {renderDoctorInfo()}
-        {renderHealthOverview()}
-        {renderQuickActions()}
-      </ScrollView>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+          <Text style={styles.loadingText}>Loading your dashboard...</Text>
+        </View>
+      ) : (
+        <ScrollView 
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {renderDoctorInfo()}
+          {renderHealthOverview()}
+          {renderQuickActions()}
+        </ScrollView>
+      )}
     </LinearGradient>
   );
 };
@@ -290,8 +339,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  refreshButton: {
+    padding: 10,
+  },
   logoutButton: {
     padding: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    marginTop: 10,
+    fontSize: 16,
   },
   content: {
     flex: 1,
