@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,45 +7,115 @@ import {
   TouchableOpacity,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 import { signOutUser } from '../services/authService';
+import { getDietPlan } from '../services/relationshipService';
 
 const DoctorDashboardScreen = ({ route, navigation }) => {
   const { doctor } = route.params;
   const [activeTab, setActiveTab] = useState('patients');
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Mock patient data
-  const patients = [
-    { 
-      id: 1, 
-      name: 'Ravi Kumar', 
-      age: 35, 
-      dosha: 'vata',
-      lastVisit: '2025-09-20',
-      hasDietPlan: true,
-      status: 'Active'
-    },
-    { 
-      id: 2, 
-      name: 'Priya Singh', 
-      age: 28, 
-      dosha: 'pitta',
-      lastVisit: '2025-09-18',
-      hasDietPlan: true,
-      status: 'Active'
-    },
-    { 
-      id: 3, 
-      name: 'Amit Joshi', 
-      age: 42, 
-      dosha: null,
-      lastVisit: null,
-      hasDietPlan: false,
-      status: 'New'
-    },
-  ];
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  // Reload when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPatients();
+    }, [doctor.uid])
+  );
+
+  const loadPatients = async () => {
+    try {
+      setLoading(true);
+      console.log('📋 Fetching patients for doctor:', doctor.uid);
+
+      // Query patients where assignedDoctorId matches this doctor
+      const patientsQuery = query(
+        collection(db, 'patients'),
+        where('assignedDoctorId', '==', doctor.uid)
+      );
+
+      const querySnapshot = await getDocs(patientsQuery);
+      const patientsData = [];
+
+      for (const docSnap of querySnapshot.docs) {
+        const patientData = { id: docSnap.id, ...docSnap.data() };
+        
+        // Fetch diet plan info for each patient
+        if (patientData.hasDietPlan) {
+          try {
+            const dietPlan = await getDietPlan(patientData.uid || docSnap.id);
+            patientData.dietPlanApproved = dietPlan?.approved || false;
+            patientData.dietPlanId = dietPlan?.id || null;
+          } catch (error) {
+            console.log('No diet plan found for patient:', patientData.uid);
+            patientData.dietPlanApproved = false;
+          }
+        }
+
+        patientsData.push(patientData);
+      }
+
+      console.log('✅ Loaded', patientsData.length, 'patients');
+      setPatients(patientsData);
+    } catch (error) {
+      console.error('❌ Error loading patients:', error);
+      Alert.alert('Error', 'Failed to load patients. Please try again.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadPatients();
+  };
+
+  const handleApproveDietPlan = async (patient) => {
+    Alert.alert(
+      'Approve Diet Plan',
+      `Are you sure you want to approve the AI-generated diet plan for ${patient.fullName || patient.name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Approve',
+          onPress: async () => {
+            try {
+              // Update diet plan document to mark as approved
+              if (patient.dietPlanId) {
+                await updateDoc(doc(db, 'dietPlans', patient.dietPlanId), {
+                  approved: true,
+                  approvedBy: doctor.uid,
+                  approvedByName: doctor.name,
+                  approvedAt: new Date().toISOString()
+                });
+
+                Alert.alert('Success', 'Diet plan approved successfully!');
+                loadPatients(); // Refresh the list
+              } else {
+                Alert.alert('Error', 'Diet plan not found');
+              }
+            } catch (error) {
+              console.error('Error approving diet plan:', error);
+              Alert.alert('Error', 'Failed to approve diet plan');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const handleCreateDietPlan = (patient) => {
     if (!patient.dosha) {
@@ -86,10 +156,10 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
           <Ionicons name="person" size={24} color="#667eea" />
         </View>
         <View style={styles.patientInfo}>
-          <Text style={styles.patientName}>{patient.name}</Text>
-          <Text style={styles.patientAge}>Age: {patient.age}</Text>
-          <Text style={[styles.patientStatus, { color: patient.status === 'New' ? '#ff6b6b' : '#28a745' }]}>
-            {patient.status}
+          <Text style={styles.patientName}>{patient.fullName || patient.name}</Text>
+          <Text style={styles.patientAge}>Age: {patient.age || 'N/A'}</Text>
+          <Text style={[styles.patientStatus, { color: patient.hasCompletedAssessment ? '#28a745' : '#ff6b6b' }]}>
+            {patient.hasCompletedAssessment ? 'Active' : 'New'}
           </Text>
         </View>
         <View style={styles.patientMeta}>
@@ -99,20 +169,41 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
             </View>
           )}
           <Text style={styles.lastVisit}>
-            {patient.lastVisit ? `Last: ${patient.lastVisit}` : 'No visits'}
+            {patient.lastAssessmentDate 
+              ? `Last: ${new Date(patient.lastAssessmentDate).toLocaleDateString()}` 
+              : 'No assessment'}
           </Text>
         </View>
       </View>
 
       <View style={styles.patientActions}>
         {patient.hasDietPlan ? (
-          <TouchableOpacity
-            style={styles.viewPlanButton}
-            onPress={() => handleViewDietPlan(patient)}
-          >
-            <Ionicons name="eye" size={16} color="#667eea" />
-            <Text style={styles.viewPlanText}>View Diet Plan</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.viewPlanButton}
+              onPress={() => handleViewDietPlan(patient)}
+            >
+              <Ionicons name="eye" size={16} color="#667eea" />
+              <Text style={styles.viewPlanText}>View Plan</Text>
+            </TouchableOpacity>
+            
+            {!patient.dietPlanApproved && (
+              <TouchableOpacity
+                style={styles.approveButton}
+                onPress={() => handleApproveDietPlan(patient)}
+              >
+                <Ionicons name="checkmark-circle" size={16} color="white" />
+                <Text style={styles.approveText}>Approve</Text>
+              </TouchableOpacity>
+            )}
+            
+            {patient.dietPlanApproved && (
+              <View style={styles.approvedBadge}>
+                <Ionicons name="checkmark-circle" size={16} color="#28a745" />
+                <Text style={styles.approvedText}>Approved</Text>
+              </View>
+            )}
+          </>
         ) : (
           <TouchableOpacity
             style={styles.createPlanButton}
@@ -125,7 +216,7 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
         
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => Alert.alert('Info', 'Edit patient functionality')}
+          onPress={() => Alert.alert('Info', 'Edit patient functionality coming soon')}
         >
           <Ionicons name="create" size={16} color="#666" />
         </TouchableOpacity>
@@ -195,12 +286,21 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
           <Text style={styles.doctorName}>{doctor.name}</Text>
           <Text style={styles.doctorSpecialization}>{doctor.specialization}</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out" size={24} color="white" />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.refreshButton}
+            onPress={handleRefresh}
+            disabled={refreshing}
+          >
+            <Ionicons name="refresh" size={22} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {renderStats()}
@@ -225,14 +325,29 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
       </View>
 
       <View style={styles.content}>
-        {activeTab === 'patients' ? (
-          <FlatList
-            data={patients}
-            renderItem={renderPatientCard}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.patientsList}
-          />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#667eea" />
+            <Text style={styles.loadingText}>Loading patients...</Text>
+          </View>
+        ) : activeTab === 'patients' ? (
+          patients.length > 0 ? (
+            <FlatList
+              data={patients}
+              renderItem={renderPatientCard}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.patientsList}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="people-outline" size={64} color="#ccc" />
+              <Text style={styles.emptyText}>No patients assigned yet</Text>
+              <Text style={styles.emptySubtext}>Patients will appear here when they select you as their doctor</Text>
+            </View>
+          )
         ) : (
           <View style={styles.scheduleContainer}>
             <Text style={styles.scheduleText}>Schedule functionality coming soon!</Text>
@@ -269,6 +384,13 @@ const styles = StyleSheet.create({
   doctorSpecialization: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  refreshButton: {
+    padding: 10,
   },
   logoutButton: {
     padding: 10,
@@ -428,6 +550,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  approveButton: {
+    flexDirection: 'row',
+    backgroundColor: '#FFA500',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  approveText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  approvedBadge: {
+    flexDirection: 'row',
+    backgroundColor: '#d4edda',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: '#28a745',
+  },
+  approvedText: {
+    color: '#28a745',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   editButton: {
     backgroundColor: 'white',
     paddingVertical: 10,
@@ -446,6 +600,35 @@ const styles = StyleSheet.create({
   scheduleText: {
     fontSize: 18,
     color: '#666',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 15,
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 
