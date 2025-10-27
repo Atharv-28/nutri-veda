@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { getDietPlan } from '../services/relationshipService';
 
 const dietPlans = {
   vata: {
@@ -119,9 +122,44 @@ const dietPlans = {
 };
 
 const DietPlanScreen = ({ route, navigation }) => {
-  const { dosha } = route.params || { dosha: 'vata' };
+  const { dosha, patient, doctor, readOnly } = route.params || { dosha: 'vata' };
   const [activeTab, setActiveTab] = useState('breakfast');
-  const plan = dietPlans[dosha];
+  const [loading, setLoading] = useState(false);
+  const [customDietPlan, setCustomDietPlan] = useState(null);
+  
+  // Fetch custom diet plan from Firestore if patient is provided
+  useEffect(() => {
+    const fetchDietPlan = async () => {
+      if (patient?.uid) {
+        setLoading(true);
+        try {
+          const plan = await getDietPlan(patient.uid);
+          if (plan) {
+            setCustomDietPlan(plan);
+          }
+        } catch (error) {
+          console.error('Error fetching diet plan:', error);
+          Alert.alert('Error', 'Failed to load diet plan from database.');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchDietPlan();
+  }, [patient?.uid]);
+
+  // Use custom diet plan if available, otherwise use default template
+  const plan = customDietPlan 
+    ? {
+        ...dietPlans[dosha],
+        breakfast: customDietPlan.meals?.breakfast || dietPlans[dosha].breakfast,
+        lunch: customDietPlan.meals?.lunch || dietPlans[dosha].lunch,
+        dinner: customDietPlan.meals?.dinner || dietPlans[dosha].dinner,
+        snacks: customDietPlan.meals?.snacks || dietPlans[dosha].snacks,
+        principles: customDietPlan.recommendations || dietPlans[dosha].principles,
+      }
+    : dietPlans[dosha];
 
   const tabs = [
     { key: 'breakfast', title: 'Breakfast', icon: 'sunny' },
@@ -147,9 +185,20 @@ const DietPlanScreen = ({ route, navigation }) => {
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{plan.title}</Text>
+        {customDietPlan && (
+          <View style={styles.customBadge}>
+            <Ionicons name="star" size={14} color="#FFC107" />
+          </View>
+        )}
       </View>
 
-      <ScrollView style={styles.content}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+          <Text style={styles.loadingText}>Loading your diet plan...</Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.content}>
         <View style={styles.principlesCard}>
           <Text style={styles.cardTitle}>Key Principles</Text>
           {plan.principles.map((principle, index) => (
@@ -229,7 +278,8 @@ const DietPlanScreen = ({ route, navigation }) => {
             <Text style={styles.tipText}>Maintain regular sleep schedule</Text>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      )}
     </LinearGradient>
   );
 };
@@ -251,6 +301,22 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
+    flex: 1,
+  },
+  customBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 8,
+    borderRadius: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    marginTop: 10,
+    fontSize: 16,
   },
   content: {
     flex: 1,

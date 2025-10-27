@@ -6,9 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { doc, updateDoc, setDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
+import { saveAssessment, saveDietPlan } from '../services/relationshipService';
 
 const questions = [
   {
@@ -86,9 +90,67 @@ const questions = [
 ];
 
 const PrakrutiTestScreen = ({ navigation, route }) => {
+  const { patient, doctor, fromPatientDashboard, role } = route.params || {};
+  
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
   const [showResult, setShowResult] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const generateDietPlan = (dosha, patientData) => {
+    const dietPlans = {
+      vata: {
+        meals: {
+          breakfast: ['Warm oatmeal with ghee', 'Stewed fruits', 'Herbal tea with ginger'],
+          lunch: ['Kitchari (rice and lentils)', 'Steamed vegetables', 'Warm soup'],
+          dinner: ['Warm vegetable stew', 'Whole grain bread', 'Herbal tea'],
+          snacks: ['Nuts and dried fruits', 'Warm milk with honey', 'Banana']
+        },
+        recommendations: [
+          'Eat warm, cooked, and moist foods',
+          'Favor sweet, sour, and salty tastes',
+          'Avoid cold, dry, and raw foods',
+          'Maintain regular meal times',
+          'Use warming spices like ginger, cumin, and cinnamon',
+          'Stay hydrated with warm beverages'
+        ]
+      },
+      pitta: {
+        meals: {
+          breakfast: ['Cool oatmeal with milk', 'Fresh fruits', 'Coconut water'],
+          lunch: ['Basmati rice with vegetables', 'Salad with cucumber', 'Buttermilk'],
+          dinner: ['Quinoa with greens', 'Steamed vegetables', 'Herbal cooling tea'],
+          snacks: ['Fresh fruits', 'Coconut water', 'Sweet lassi']
+        },
+        recommendations: [
+          'Eat cooling and refreshing foods',
+          'Favor sweet, bitter, and astringent tastes',
+          'Avoid spicy, oily, and fried foods',
+          'Avoid excessive heat and sun',
+          'Use cooling spices like coriander, fennel, and mint',
+          'Drink plenty of cool (not cold) water'
+        ]
+      },
+      kapha: {
+        meals: {
+          breakfast: ['Light breakfast', 'Herbal tea with honey', 'Fresh fruits'],
+          lunch: ['Light grain with vegetables', 'Bean soup', 'Ginger tea'],
+          dinner: ['Light vegetable soup', 'Steamed vegetables', 'Herbal tea'],
+          snacks: ['Fresh fruits', 'Honey', 'Herbal tea']
+        },
+        recommendations: [
+          'Eat light, warm, and dry foods',
+          'Favor pungent, bitter, and astringent tastes',
+          'Avoid heavy, oily, and cold foods',
+          'Exercise regularly to stimulate metabolism',
+          'Use warming spices like black pepper, ginger, and turmeric',
+          'Reduce dairy and sweet foods'
+        ]
+      }
+    };
+
+    return dietPlans[dosha] || dietPlans.vata;
+  };
 
   const handleAnswer = (option) => {
     const newAnswers = { ...answers, [currentQuestion]: option };
@@ -117,20 +179,43 @@ const PrakrutiTestScreen = ({ navigation, route }) => {
   };
 
   // Navigate to the correct dashboard depending on the logged-in role.
-  // Role can be passed via route.params.role or older navigation.getParam('role').
   const handleGoToDashboard = () => {
-    const roleFromRoute = route?.params?.role || (navigation.getParam ? navigation.getParam('role') : null);
+    if (fromPatientDashboard && patient) {
+      // Navigate back to patient dashboard with updated data
+      navigation.navigate('PatientDashboard', { 
+        patient: {
+          ...patient,
+          dosha: showResult.dominant,
+          hasCompletedAssessment: true,
+          hasDietPlan: true
+        },
+        doctor
+      });
+      return;
+    }
+    
+    const roleFromRoute = route?.params?.role || role;
     if (roleFromRoute === 'doctor') {
       navigation.navigate('DoctorDashboard');
       return;
     }
     if (roleFromRoute === 'patient') {
-      navigation.navigate('PatientDashboard');
+      navigation.navigate('PatientDashboard', {
+        patient: {
+          ...patient,
+          dosha: showResult.dominant,
+          hasCompletedAssessment: true,
+          hasDietPlan: true
+        },
+        doctor
+      });
       return;
     }
+    
+    navigation.goBack();
   };
 
-  const calculateResult = (allAnswers) => {
+  const calculateResult = async (allAnswers) => {
     const scores = { vata: 0, pitta: 0, kapha: 0 };
     
     Object.values(allAnswers).forEach(answer => {
@@ -141,14 +226,86 @@ const PrakrutiTestScreen = ({ navigation, route }) => {
       scores[a] > scores[b] ? a : b
     );
 
+    // Save assessment to Firestore
+    if (patient?.uid) {
+      setSaving(true);
+      try {
+        console.log('💾 Saving assessment results...');
+        
+        // Save assessment to assessments collection
+        const assessmentData = {
+          patientId: patient.uid,
+          patientName: patient.fullName || patient.name,
+          doctorId: patient.assignedDoctorId || null,
+          dosha: dominant,
+          scores: scores,
+          answers: allAnswers,
+          completedAt: new Date().toISOString()
+        };
+        
+        await saveAssessment(assessmentData);
+        
+        // Update patient document with assessment results
+        await updateDoc(doc(db, 'patients', patient.uid), {
+          dosha: dominant,
+          doshaScores: scores,
+          hasCompletedAssessment: true,
+          lastAssessmentDate: new Date().toISOString()
+        });
+        
+        // Generate basic diet plan automatically
+        const dietPlan = generateDietPlan(dominant, patient);
+        
+        // Save diet plan to Firestore
+        await saveDietPlan({
+          patientId: patient.uid,
+          patientName: patient.fullName || patient.name,
+          doctorId: patient.assignedDoctorId || 'system',
+          doctorName: patient.assignedDoctorName || 'Auto-generated',
+          dosha: dominant,
+          meals: dietPlan.meals,
+          recommendations: dietPlan.recommendations,
+          createdAt: new Date().toISOString()
+        });
+        
+        // Update patient document with diet plan flag
+        await updateDoc(doc(db, 'patients', patient.uid), {
+          hasDietPlan: true
+        });
+        
+        console.log('✅ Assessment and diet plan saved successfully');
+        
+      } catch (error) {
+        console.error('❌ Error saving assessment:', error);
+        Alert.alert('Error', 'Failed to save assessment results. Please try again.');
+      } finally {
+        setSaving(false);
+      }
+    }
+
     setShowResult({ dominant, scores });
   };
 
   const getDoshaDescription = (dosha) => {
     const descriptions = {
-      vata: { title: 'Vata Dominant', description: 'Vata traits', color: '#8E44AD', foods: '', avoid: '' },
-      pitta: { title: 'Pitta Dominant', description: 'Pitta traits', color: '#E74C3C', foods: '', avoid: '' },
-      kapha: { title: 'Kapha Dominant', description: 'Kapha traits', color: '#27AE60', foods: '', avoid: '' }
+      vata: { 
+        title: 'Vata Dominant', 
+        description: 'You have a Vata constitution characterized by creativity, quick thinking, and adaptability. You may experience dry skin, irregular digestion, and variable energy levels.',
+        color: '#8E44AD',
+        characteristics: ['Light frame', 'Quick movements', 'Creative mind', 'Variable appetite'],
+      },
+      pitta: { 
+        title: 'Pitta Dominant', 
+        description: 'You have a Pitta constitution characterized by strong digestion, sharp intellect, and leadership qualities. You may experience heat sensitivity and irritability when hungry.',
+        color: '#E74C3C',
+        characteristics: ['Medium build', 'Sharp mind', 'Strong appetite', 'Warm body'],
+      },
+      kapha: { 
+        title: 'Kapha Dominant', 
+        description: 'You have a Kapha constitution characterized by stability, strength, and calm demeanor. You have good endurance but may gain weight easily.',
+        color: '#27AE60',
+        characteristics: ['Solid frame', 'Calm nature', 'Steady energy', 'Good stamina'],
+      }
     };
     return descriptions[dosha];
   };
@@ -188,47 +345,77 @@ const PrakrutiTestScreen = ({ navigation, route }) => {
             <Text style={styles.resultTitle}>{result.title}</Text>
             <Text style={styles.resultDescription}>{result.description}</Text>
             
+            <View style={styles.characteristicsContainer}>
+              <Text style={styles.sectionTitle}>Your Characteristics:</Text>
+              {result.characteristics.map((char, index) => (
+                <View key={index} style={styles.characteristicItem}>
+                  <Ionicons name="checkmark" size={16} color={result.color} />
+                  <Text style={styles.characteristicText}>{char}</Text>
+                </View>
+              ))}
+            </View>
+
             <View style={styles.scoresContainer}>
-              <Text style={styles.scoresTitle}>Your Dosha Scores:</Text>
+              <Text style={styles.sectionTitle}>Your Dosha Scores:</Text>
               <View style={styles.scoreItem}>
                 <Text style={styles.scoreLabel}>Vata:</Text>
+                <View style={styles.scoreBar}>
+                  <View style={[styles.scoreBarFill, { width: `${(showResult.scores.vata / 16) * 100}%`, backgroundColor: '#8E44AD' }]} />
+                </View>
                 <Text style={styles.scoreValue}>{showResult.scores.vata}</Text>
               </View>
               <View style={styles.scoreItem}>
                 <Text style={styles.scoreLabel}>Pitta:</Text>
+                <View style={styles.scoreBar}>
+                  <View style={[styles.scoreBarFill, { width: `${(showResult.scores.pitta / 16) * 100}%`, backgroundColor: '#E74C3C' }]} />
+                </View>
                 <Text style={styles.scoreValue}>{showResult.scores.pitta}</Text>
               </View>
               <View style={styles.scoreItem}>
                 <Text style={styles.scoreLabel}>Kapha:</Text>
+                <View style={styles.scoreBar}>
+                  <View style={[styles.scoreBarFill, { width: `${(showResult.scores.kapha / 16) * 100}%`, backgroundColor: '#27AE60' }]} />
+                </View>
                 <Text style={styles.scoreValue}>{showResult.scores.kapha}</Text>
               </View>
             </View>
 
-            <View style={styles.recommendationsContainer}>
-              <Text style={styles.recommendationTitle}>Recommended Foods:</Text>
-              <Text style={styles.recommendationText}>{result.foods}</Text>
-              
-              <Text style={styles.recommendationTitle}>Foods to Avoid:</Text>
-              <Text style={styles.recommendationText}>{result.avoid}</Text>
-            </View>
+            {saving ? (
+              <View style={styles.savingContainer}>
+                <ActivityIndicator size="large" color="#667eea" />
+                <Text style={styles.savingText}>Saving your results and generating diet plan...</Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.successContainer}>
+                  <Ionicons name="checkmark-circle" size={24} color="#28a745" />
+                  <Text style={styles.successText}>Assessment saved! Diet plan generated.</Text>
+                </View>
 
-            <TouchableOpacity style={styles.retakeButton} onPress={resetTest}>
-              <Text style={styles.buttonText}>Retake Test</Text>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.continueButton} 
+                  onPress={() => navigation.navigate('DietPlan', { 
+                    dosha: showResult.dominant,
+                    patient,
+                    doctor,
+                    readOnly: true
+                  })}
+                >
+                  <Text style={styles.buttonText}>View My Diet Plan</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.continueButton} 
-              onPress={() => navigation.navigate('DietPlan', { dosha: showResult.dominant })}
-            >
-              <Text style={styles.buttonText}>Get Diet Plan</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.goHomeButton}
-              onPress={handleGoToDashboard}
-            >
-              <Text style={styles.buttonText}>Go to Dashboard</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.goHomeButton}
+                  onPress={handleGoToDashboard}
+                >
+                  <Text style={styles.buttonText}>Go to Dashboard</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.retakeButton} onPress={resetTest}>
+                  <Text style={styles.retakeButtonText}>Retake Test</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </ScrollView>
       </LinearGradient>
@@ -365,6 +552,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#e9eefc',
     borderColor: '#667eea',
   },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
   navButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -457,11 +649,19 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginBottom: 10,
   },
+  retakeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   continueButton: {
     backgroundColor: '#28a745',
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 25,
+    width: '100%',
+    marginBottom: 10,
   },
   goHomeButton: {
     backgroundColor: '#007bff',
@@ -470,11 +670,73 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginTop: 10,
     marginBottom: 10,
+    width: '100%',
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
+  },
+  characteristicsContainer: {
+    width: '100%',
+    marginVertical: 20,
+    paddingHorizontal: 10,
+  },
+  characteristicItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  characteristicText: {
+    fontSize: 15,
+    color: '#555',
+    marginLeft: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+    marginTop: 5,
+  },
+  scoreBar: {
+    flex: 1,
+    height: 20,
+    backgroundColor: '#e9ecef',
+    borderRadius: 10,
+    marginHorizontal: 10,
+    overflow: 'hidden',
+  },
+  scoreBarFill: {
+    height: '100%',
+    borderRadius: 10,
+  },
+  savingContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  savingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  successContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#d4edda',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 20,
+    width: '100%',
+  },
+  successText: {
+    marginLeft: 8,
+    fontSize: 15,
+    color: '#155724',
+    fontWeight: '500',
   },
 });
 

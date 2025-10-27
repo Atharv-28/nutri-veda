@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { signOutUser } from '../services/authService';
 import { getPatientDoctor } from '../services/relationshipService';
 import { doc, getDoc } from 'firebase/firestore';
@@ -29,6 +30,15 @@ const PatientDashboardScreen = ({ route, navigation }) => {
   useEffect(() => {
     loadPatientData();
   }, []);
+
+  // Reload data when screen comes into focus (e.g., after completing assessment)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (patient?.uid) {
+        loadPatientData();
+      }
+    }, [patient?.uid])
+  );
 
   const loadPatientData = async () => {
     try {

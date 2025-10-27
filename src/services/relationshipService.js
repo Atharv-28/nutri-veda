@@ -289,6 +289,50 @@ export const getPatientDietPlans = async (patientId, limitCount = 1) => {
 };
 
 /**
+ * Get patient's latest diet plan (convenience function)
+ * @param {string} patientId - Patient's Firebase UID
+ * @returns {Object|null} - Latest diet plan or null
+ */
+export const getDietPlan = async (patientId) => {
+  try {
+    console.log('📋 Fetching diet plan for patient:', patientId);
+    
+    // Simple query without orderBy to avoid index requirement
+    const plansQuery = query(
+      collection(db, 'dietPlans'),
+      where('patientId', '==', patientId)
+    );
+    
+    const querySnapshot = await getDocs(plansQuery);
+    
+    if (querySnapshot.empty) {
+      console.log('⚠️ No diet plan found for patient');
+      return null;
+    }
+    
+    // Manually sort by createdAt to get the latest plan
+    const plans = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Sort by createdAt descending and return the first (latest) one
+    plans.sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return dateB - dateA; // Descending order
+    });
+    
+    console.log('✅ Diet plan fetched successfully:', plans[0].id);
+    return plans[0];
+    
+  } catch (error) {
+    console.error('❌ Error fetching diet plan:', error);
+    throw error;
+  }
+};
+
+/**
  * Update diet plan
  * @param {string} planId - Diet plan document ID
  * @param {Object} updates - Fields to update
