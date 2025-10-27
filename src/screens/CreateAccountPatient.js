@@ -34,7 +34,7 @@ const CreateAccountPatient = ({ navigation }) => {
   const [bloodGroup, setBloodGroup] = useState("");
   const [medicalConditions, setMedicalConditions] = useState(""); // comma separated
   const [allergies, setAllergies] = useState(""); // comma separated
-  const [lifestyle, setLifestyle] = useState(""); // Sedentary / Moderate / Active
+  const [activityLevel, setActivityLevel] = useState('');
   const [dietaryPreference, setDietaryPreference] = useState(""); // Veg / Vegan / Non-Veg / Satvik
   const [address, setAddress] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
@@ -103,7 +103,7 @@ const CreateAccountPatient = ({ navigation }) => {
       email: email.trim().toLowerCase(),
       mobile,
       password, // Will be used for Firebase auth, not stored in Firestore
-      role: 'patient',
+      role: "patient",
       gender: gender || null,
       dob: dob || null,
       age: age || null,
@@ -123,20 +123,16 @@ const CreateAccountPatient = ({ navigation }) => {
 
     try {
       const result = await createAccount(patientData);
-      
+
       setLoading(false);
 
       if (result.success) {
-        Alert.alert(
-          "Success",
-          "Patient account created successfully!",
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.navigate("PatientLogin")
-            }
-          ]
-        );
+        Alert.alert("Success", "Patient account created successfully!", [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("PatientLogin"),
+          },
+        ]);
       } else {
         Alert.alert("Error", result.error || "Failed to create account");
       }
@@ -303,12 +299,35 @@ const CreateAccountPatient = ({ navigation }) => {
             value={allergies}
             onChangeText={setAllergies}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Lifestyle (Sedentary/Moderate/Active)"
-            value={lifestyle}
-            onChangeText={setLifestyle}
-          />
+          <View style={styles.pickerContainer}>
+                <Picker
+            selectedValue={activityLevel}
+            onValueChange={(itemValue) => setActivityLevel(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Activity Level" value="" />
+            <Picker.Item
+              label="Sedentary (Little to no exercise)"
+              value="Sedentary"
+            />
+            <Picker.Item
+              label="Lightly Active (1-3 days/week)"
+              value="Lightly Active"
+            />
+            <Picker.Item
+              label="Moderately Active (3-5 days/week)"
+              value="Moderately Active"
+            />
+            <Picker.Item
+              label="Very Active (6-7 days/week)"
+              value="Very Active"
+            />
+            <Picker.Item
+              label="Extra Active (Athlete/Physical job)"
+              value="Extra Active"
+            />
+          </Picker>
+          </View>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={dietaryPreference}
@@ -338,8 +357,8 @@ const CreateAccountPatient = ({ navigation }) => {
             keyboardType="phone-pad"
           />
 
-          <TouchableOpacity 
-            style={styles.button} 
+          <TouchableOpacity
+            style={styles.button}
             onPress={handleCreate}
             disabled={loading}
           >

@@ -182,19 +182,19 @@ const PatientDashboardScreen = ({ route, navigation }) => {
           <Text style={styles.progressValue}>{patient?.weight || 'Not set'}</Text>
         </View>
         <View style={styles.progressItem}>
-          <Ionicons name="flash" size={20} color="#ffa500" />
-          <Text style={styles.progressLabel}>Energy</Text>
-          <Text style={styles.progressValue}>{patient?.energyLevel || 'Baseline'}</Text>
+          <Ionicons name="leaf" size={20} color="#28a745" />
+          <Text style={styles.progressLabel}>Diet Preference</Text>
+          <Text style={styles.progressValue}>{patient?.dietaryPreference || 'Not set'}</Text>
         </View>
         <View style={styles.progressItem}>
-          <Ionicons name="restaurant" size={20} color="#28a745" />
-          <Text style={styles.progressLabel}>Digestion</Text>
-          <Text style={styles.progressValue}>{patient?.digestionStatus || 'Normal'}</Text>
+          <Ionicons name="fitness" size={20} color="#E74C3C" />
+          <Text style={styles.progressLabel}>Lifestyle</Text>
+          <Text style={styles.progressValue}>{patient?.lifestyle || 'Not set'}</Text>
         </View>
         <View style={styles.progressItem}>
-          <Ionicons name="bed" size={20} color="#8E44AD" />
-          <Text style={styles.progressLabel}>Sleep</Text>
-          <Text style={styles.progressValue}>{patient?.sleepQuality || 'Average'}</Text>
+          <Ionicons name="medkit" size={20} color="#8E44AD" />
+          <Text style={styles.progressLabel}>Conditions</Text>
+          <Text style={styles.progressValue}>{patient?.medicalConditions || 'None'}</Text>
         </View>
       </View>
     </View>
