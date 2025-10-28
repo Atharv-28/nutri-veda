@@ -114,7 +114,7 @@ const CreateAccountPatient = ({ navigation }) => {
         ? medicalConditions.split(",").map((s) => s.trim())
         : [],
       allergies: allergies ? allergies.split(",").map((s) => s.trim()) : [],
-      lifestyle: lifestyle || null,
+      lifestyle: activityLevel || null,
       dietaryPreference: dietaryPreference || null,
       address: address || null,
       emergencyContact: emergencyContact || null,

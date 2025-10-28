@@ -17,9 +17,12 @@ export const createAccount = async (userData) => {
   try {
     const { email, password, role, ...profileData } = userData;
 
+    console.log('📝 Creating account for:', email, 'Role:', role);
+
     // Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    console.log('✅ Firebase Auth user created:', user.uid);
 
     // Update display name if provided
     if (profileData.name || profileData.fullName) {
@@ -27,8 +30,9 @@ export const createAccount = async (userData) => {
         await updateProfile(user, {
           displayName: profileData.name || profileData.fullName
         });
+        console.log('✅ Display name updated');
       } catch (error) {
-        alert('⚠️ Could not update display name:', error.message);
+        console.log('⚠️ Could not update display name:', error.message);
       }
     }
 
@@ -41,19 +45,23 @@ export const createAccount = async (userData) => {
       createdAt: new Date().toISOString(),
     };
 
-    // Store locally first (immediate)
-    await AsyncStorage.setItem('user', JSON.stringify(userDataToStore));
-
-    // Try to store in Firestore with timeout (background, don't block)
+    // Store in Firestore with proper error handling
     const collection = role === 'doctor' ? 'doctors' : 'patients';
     
-    // Don't await this - let it happen in background
-    Promise.race([
-      setDoc(doc(db, collection, user.uid), userDataToStore),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
-    ])
-      .then(() => console.log(`✅ User data saved to Firestore: ${collection}/${user.uid}`))
-      .catch((err) => console.log('⚠️ Firestore save skipped:', err.message));
+    try {
+      console.log(`💾 Saving to Firestore: ${collection}/${user.uid}`);
+      await setDoc(doc(db, collection, user.uid), userDataToStore);
+      console.log(`✅ User data saved to Firestore successfully`);
+    } catch (firestoreError) {
+      console.error('❌ Firestore save error:', firestoreError.message);
+      // Even if Firestore fails, we still have the Auth user created
+      // Store locally and continue
+      console.log('⚠️ Continuing with local storage only');
+    }
+
+    // Store locally
+    await AsyncStorage.setItem('user', JSON.stringify(userDataToStore));
+    console.log('✅ User data cached locally');
 
     return {
       success: true,
@@ -62,9 +70,22 @@ export const createAccount = async (userData) => {
 
   } catch (error) {
     console.error('❌ Account creation error:', error.message);
+    
+    // Provide more specific error messages
+    let errorMessage = error.message;
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = 'This email is already registered. Please login instead.';
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = 'Invalid email address format.';
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = 'Password is too weak. Use at least 6 characters.';
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = 'Network error. Please check your internet connection.';
+    }
+    
     return {
       success: false,
-      error: error.message
+      error: errorMessage
     };
   }
 };
