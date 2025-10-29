@@ -141,11 +141,20 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
   };
 
   const handleViewDietPlan = (patient) => {
+    // Navigate to view-only diet plan screen
     navigation.navigate('DietPlan', { 
       dosha: patient.dosha,
       patient,
       doctor,
-      readOnly: false
+      readOnly: true
+    });
+  };
+
+  const handleEditDietPlan = (patient) => {
+    // Navigate to edit screen for doctors
+    navigation.navigate('EditDietPlan', { 
+      patient,
+      doctor
     });
   };
 
@@ -203,6 +212,13 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
                 <Text style={styles.approvedText}>Approved</Text>
               </View>
             )}
+            
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => handleEditDietPlan(patient)}
+            >
+              <Ionicons name="create" size={16} color="#666" />
+            </TouchableOpacity>
           </>
         ) : (
           <TouchableOpacity
@@ -213,13 +229,6 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
             <Text style={styles.createPlanText}>Create Diet Plan</Text>
           </TouchableOpacity>
         )}
-        
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => Alert.alert('Info', 'Edit patient functionality coming soon')}
-        >
-          <Ionicons name="create" size={16} color="#666" />
-        </TouchableOpacity>
       </View>
     </View>
   );

@@ -11,6 +11,7 @@ import DoctorDashboardScreen from './src/screens/DoctorDashboardScreen';
 import PatientDashboardScreen from './src/screens/PatientDashboardScreen';
 import PrakrutiTestScreen from './src/screens/PrakrutiTestScreen';
 import DietPlanScreen from './src/screens/DietPlanScreen';
+import EditDietPlanScreen from './src/screens/EditDietPlanScreen';
 import DoctorLoginScreen from './src/screens/DoctorLoginScreen';
 import PatientLoginScreen from './src/screens/PatientLoginScreen';
 import DoctorCreateAccount from './src/screens/CreateAccountDoctor';
@@ -40,6 +41,7 @@ export default function App() {
             <Stack.Screen name="PatientDashboard" component={PatientDashboardScreen} />
             <Stack.Screen name="PrakrutiTest" component={PrakrutiTestScreen} />
             <Stack.Screen name="DietPlan" component={DietPlanScreen} />
+            <Stack.Screen name="EditDietPlan" component={EditDietPlanScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>
