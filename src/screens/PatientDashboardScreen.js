@@ -7,12 +7,13 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { signOutUser } from '../services/authService';
-import { getPatientDoctor } from '../services/relationshipService';
+import { getPatientDoctor, getDietPlan } from '../services/relationshipService';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 
@@ -23,6 +24,8 @@ const PatientDashboardScreen = ({ route, navigation }) => {
   const [doctor, setDoctor] = useState(initialDoctor);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [dietPlanApproved, setDietPlanApproved] = useState(false);
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
   
   const patientName = patient?.fullName || patient?.name || 'Patient';
 
@@ -56,6 +59,21 @@ const PatientDashboardScreen = ({ route, navigation }) => {
             const result = await getPatientDoctor(patient.uid);
             if (result.success && result.doctor) {
               setDoctor(result.doctor);
+            }
+          }
+
+          // Check if diet plan is approved
+          if (freshPatientData.hasDietPlan) {
+            try {
+              const dietPlan = await getDietPlan(patient.uid);
+              if (dietPlan && dietPlan.approved) {
+                setDietPlanApproved(true);
+              } else {
+                setDietPlanApproved(false);
+              }
+            } catch (error) {
+              console.log('Could not fetch diet plan approval status');
+              setDietPlanApproved(false);
             }
           }
         }
@@ -167,7 +185,10 @@ const PatientDashboardScreen = ({ route, navigation }) => {
             <Text style={styles.doctorExperience}>{doctor.yearsExperience || doctor.experience || ''} experience</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.contactButton}>
+        <TouchableOpacity 
+          style={styles.contactButton}
+          onPress={() => setShowDoctorModal(true)}
+        >
           <Ionicons name="call" size={16} color="#667eea" />
           <Text style={styles.contactText}>Contact Doctor</Text>
         </TouchableOpacity>
@@ -251,6 +272,12 @@ const PatientDashboardScreen = ({ route, navigation }) => {
                   : 'Waiting for doctor to create your plan'
                 }
               </Text>
+              {dietPlanApproved && (
+                <View style={styles.approvalBadge}>
+                  <Ionicons name="checkmark-circle" size={14} color="#28a745" />
+                  <Text style={styles.approvalBadgeText}>Approved by Doctor</Text>
+                </View>
+              )}
             </View>
             <Ionicons 
               name="chevron-forward" 
@@ -281,6 +308,110 @@ const PatientDashboardScreen = ({ route, navigation }) => {
         <Ionicons name="chevron-forward" size={20} color="#666" />
       </TouchableOpacity>
     </View>
+  );
+
+  const renderDoctorDetailsModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={showDoctorModal}
+      onRequestClose={() => setShowDoctorModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Doctor Contact Details</Text>
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setShowDoctorModal(false)}
+            >
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.modalBody}>
+            <View style={styles.modalDoctorInfo}>
+              <View style={styles.modalDoctorAvatar}>
+                <Ionicons name="medical" size={40} color="#667eea" />
+              </View>
+              <View>
+                <Text style={styles.modalDoctorName}>{doctor?.name || 'N/A'}</Text>
+                <Text style={styles.modalDoctorSpecialization}>
+                  {doctor?.specialization || 'General Practitioner'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.modalInfoSection}>
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="business" size={20} color="#667eea" />
+                <View style={styles.modalInfoTextContainer}>
+                  <Text style={styles.modalInfoLabel}>Clinic Name</Text>
+                  <Text style={styles.modalInfoValue}>
+                    {doctor?.clinicName || 'Not available'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="location" size={20} color="#E74C3C" />
+                <View style={styles.modalInfoTextContainer}>
+                  <Text style={styles.modalInfoLabel}>Address</Text>
+                  <Text style={styles.modalInfoValue}>
+                    {doctor?.address || 'Not available'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="cash" size={20} color="#28a745" />
+                <View style={styles.modalInfoTextContainer}>
+                  <Text style={styles.modalInfoLabel}>Consultation Fees</Text>
+                  <Text style={styles.modalInfoValue}>
+                    {doctor?.consultationFees ? `₹${doctor.consultationFees}` : 'Not available'}
+                  </Text>
+                </View>
+              </View>
+
+              {doctor?.mobile && (
+                <View style={styles.modalInfoRow}>
+                  <Ionicons name="call" size={20} color="#8E44AD" />
+                  <View style={styles.modalInfoTextContainer}>
+                    <Text style={styles.modalInfoLabel}>Phone</Text>
+                    <Text style={styles.modalInfoValue}>{doctor.mobile}</Text>
+                  </View>
+                </View>
+              )}
+
+              {doctor?.availability && (
+                <View style={styles.modalInfoRow}>
+                  <Ionicons name="time" size={20} color="#FFA500" />
+                  <View style={styles.modalInfoTextContainer}>
+                    <Text style={styles.modalInfoLabel}>Availability</Text>
+                    <Text style={styles.modalInfoValue}>{doctor.availability}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            <TouchableOpacity 
+              style={styles.modalCallButton}
+              onPress={() => {
+                setShowDoctorModal(false);
+                if (doctor?.mobile) {
+                  Alert.alert('Call Doctor', `Calling ${doctor.mobile}...`);
+                } else {
+                  Alert.alert('No Phone', 'Phone number not available');
+                }
+              }}
+            >
+              <Ionicons name="call" size={20} color="white" />
+              <Text style={styles.modalCallButtonText}>Call Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 
   return (
@@ -322,6 +453,8 @@ const PatientDashboardScreen = ({ route, navigation }) => {
           {renderQuickActions()}
         </ScrollView>
       )}
+
+      {renderDoctorDetailsModal()}
     </LinearGradient>
   );
 };
@@ -537,6 +670,128 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 2,
+  },
+  approvalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#d4edda',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  approvalBadgeText: {
+    fontSize: 11,
+    color: '#28a745',
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 500,
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f2f5',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseButton: {
+    padding: 5,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalDoctorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 25,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f2f5',
+  },
+  modalDoctorAvatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#f0f2f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+  },
+  modalDoctorName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalDoctorSpecialization: {
+    fontSize: 14,
+    color: '#667eea',
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  modalInfoSection: {
+    marginBottom: 20,
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+    paddingLeft: 5,
+  },
+  modalInfoTextContainer: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  modalInfoLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 4,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  modalInfoValue: {
+    fontSize: 15,
+    color: '#333',
+    fontWeight: '500',
+  },
+  modalCallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#667eea',
+    paddingVertical: 15,
+    borderRadius: 10,
+    gap: 10,
+    marginTop: 10,
+  },
+  modalCallButtonText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
