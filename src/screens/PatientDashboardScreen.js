@@ -288,12 +288,21 @@ const PatientDashboardScreen = ({ route, navigation }) => {
         </>
       )}
 
-      <TouchableOpacity style={styles.actionButton}>
+      <TouchableOpacity 
+        style={styles.actionButton}
+        onPress={() => {
+          if (!doctor) {
+            Alert.alert('No Doctor', 'Please select a doctor first to book an appointment');
+            return;
+          }
+          navigation.navigate('AppointmentBooking', { patient, doctor });
+        }}
+      >
         <Ionicons name="calendar" size={24} color="#E74C3C" />
         <View style={styles.actionContent}>
-          <Text style={styles.actionTitle}>Next Appointment</Text>
+          <Text style={styles.actionTitle}>Book Appointment</Text>
           <Text style={styles.actionSubtitle}>
-            {patient?.nextAppointment ? patient.nextAppointment : 'Not scheduled'}
+            {patient?.nextAppointment ? `Next: ${patient.nextAppointment}` : 'Schedule your consultation'}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#666" />
@@ -394,20 +403,33 @@ const PatientDashboardScreen = ({ route, navigation }) => {
               )}
             </View>
 
-            <TouchableOpacity 
-              style={styles.modalCallButton}
-              onPress={() => {
-                setShowDoctorModal(false);
-                if (doctor?.mobile) {
-                  Alert.alert('Call Doctor', `Calling ${doctor.mobile}...`);
-                } else {
-                  Alert.alert('No Phone', 'Phone number not available');
-                }
-              }}
-            >
-              <Ionicons name="call" size={20} color="white" />
-              <Text style={styles.modalCallButtonText}>Call Now</Text>
-            </TouchableOpacity>
+            <View style={styles.modalActionButtons}>
+              <TouchableOpacity 
+                style={styles.modalCallButton}
+                onPress={() => {
+                  setShowDoctorModal(false);
+                  if (doctor?.mobile) {
+                    Alert.alert('Call Doctor', `Calling ${doctor.mobile}...`);
+                  } else {
+                    Alert.alert('No Phone', 'Phone number not available');
+                  }
+                }}
+              >
+                <Ionicons name="call" size={20} color="white" />
+                <Text style={styles.modalCallButtonText}>Call Now</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.modalBookButton}
+                onPress={() => {
+                  setShowDoctorModal(false);
+                  navigation.navigate('AppointmentBooking', { patient, doctor });
+                }}
+              >
+                <Ionicons name="calendar" size={20} color="white" />
+                <Text style={styles.modalCallButtonText}>Book Appointment</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -778,7 +800,13 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
+  modalActionButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
   modalCallButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -786,7 +814,16 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 10,
     gap: 10,
-    marginTop: 10,
+  },
+  modalBookButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#28a745',
+    paddingVertical: 15,
+    borderRadius: 10,
+    gap: 10,
   },
   modalCallButtonText: {
     fontSize: 16,

@@ -325,10 +325,10 @@ const DoctorDashboardScreen = ({ route, navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'schedule' && styles.activeTab]}
-          onPress={() => setActiveTab('schedule')}
+          onPress={() => navigation.navigate('Appointments', { doctor })}
         >
           <Text style={[styles.tabText, activeTab === 'schedule' && styles.activeTabText]}>
-            Schedule
+            Appointments
           </Text>
         </TouchableOpacity>
       </View>
