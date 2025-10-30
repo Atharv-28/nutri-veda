@@ -308,7 +308,10 @@ const PatientDashboardScreen = ({ route, navigation }) => {
         <Ionicons name="chevron-forward" size={20} color="#666" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.actionButton}>
+      <TouchableOpacity 
+        style={styles.actionButton}
+        onPress={() => navigation.navigate('ProgressTracking', { patient })}
+      >
         <Ionicons name="trending-up" size={24} color="#8E44AD" />
         <View style={styles.actionContent}>
           <Text style={styles.actionTitle}>Progress Tracking</Text>

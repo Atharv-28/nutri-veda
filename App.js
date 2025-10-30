@@ -18,6 +18,7 @@ import DoctorCreateAccount from './src/screens/CreateAccountDoctor';
 import PatientCreateAccount from './src/screens/CreateAccountPatient';
 import AppointmentBookingScreen from './src/screens/AppointmentBookingScreen';
 import AppointmentsScreen from './src/screens/AppointmentsScreen';
+import ProgressTrackingScreen from './src/screens/ProgressTrackingScreen';
 
 const Stack = createStackNavigator();
 
@@ -46,6 +47,7 @@ export default function App() {
             <Stack.Screen name="EditDietPlan" component={EditDietPlanScreen} />
             <Stack.Screen name="AppointmentBooking" component={AppointmentBookingScreen} />
             <Stack.Screen name="Appointments" component={AppointmentsScreen} />
+            <Stack.Screen name="ProgressTracking" component={ProgressTrackingScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaView>
