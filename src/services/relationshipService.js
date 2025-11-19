@@ -14,6 +14,7 @@ import {
   arrayRemove,
   Timestamp 
 } from 'firebase/firestore';
+import { generateDailyPlan, getDoshaRecommendations } from '../data/nutriVedaDietEngine';
 
 /**
  * Link a patient to a doctor
@@ -218,6 +219,37 @@ export const getPatientAssessments = async (patientId) => {
   } catch (error) {
     console.error('❌ Error fetching assessments:', error.message);
     return { success: false, error: error.message, assessments: [] };
+  }
+};
+
+/**
+ * Generate AI diet plan using NutriVeda Engine
+ * @param {string} dosha - Dominant dosha (vata, pitta, kapha)
+ * @returns {Object} - Generated diet plan
+ */
+export const generateAIDietPlan = (dosha) => {
+  try {
+    console.log(`🤖 Generating AI diet plan for ${dosha} dosha`);
+    
+    // Generate complete daily plan using the NutriVeda engine
+    const dailyPlan = generateDailyPlan(dosha.toLowerCase());
+    const recommendations = getDoshaRecommendations(dosha.toLowerCase());
+    
+    return {
+      meals: dailyPlan.meals,
+      doshaInfo: dailyPlan.doshaInfo,
+      spices: dailyPlan.spices,
+      spicesNote: dailyPlan.spicesNote,
+      mindfulEating: dailyPlan.mindfulEating,
+      dailyRoutine: dailyPlan.dailyRoutine,
+      keyPrinciples: dailyPlan.keyPrinciples,
+      recommendations: recommendations,
+      generatedAt: dailyPlan.generatedAt,
+      version: dailyPlan.version
+    };
+  } catch (error) {
+    console.error('❌ Error generating AI diet plan:', error.message);
+    throw error;
   }
 };
 

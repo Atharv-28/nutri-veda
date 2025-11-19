@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
-import { saveAssessment, saveDietPlan } from '../services/relationshipService';
+import { saveAssessment, saveDietPlan, generateAIDietPlan } from '../services/relationshipService';
 
 const questions = [
   {
@@ -97,59 +97,58 @@ const PrakrutiTestScreen = ({ navigation, route }) => {
   const [showResult, setShowResult] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Use the new AI-powered diet generation engine
   const generateDietPlan = (dosha, patientData) => {
-    const dietPlans = {
-      vata: {
-        meals: {
-          breakfast: ['Warm oatmeal with ghee', 'Stewed fruits', 'Herbal tea with ginger'],
-          lunch: ['Kitchari (rice and lentils)', 'Steamed vegetables', 'Warm soup'],
-          dinner: ['Warm vegetable stew', 'Whole grain bread', 'Herbal tea'],
-          snacks: ['Nuts and dried fruits', 'Warm milk with honey', 'Banana']
+    try {
+      // Generate diet plan using the NutriVeda Engine
+      return generateAIDietPlan(dosha);
+    } catch (error) {
+      console.error('Error generating diet plan:', error);
+      // Fallback to basic plan if AI generation fails
+      const fallbackPlans = {
+        vata: {
+          meals: {
+            breakfast: ['Warm oatmeal with ghee', 'Stewed fruits', 'Herbal tea with ginger'],
+            lunch: ['Kitchari (rice and lentils)', 'Steamed vegetables', 'Warm soup'],
+            dinner: ['Warm vegetable stew', 'Whole grain bread', 'Herbal tea'],
+            snacks: ['Nuts and dried fruits', 'Warm milk with honey', 'Banana']
+          },
+          recommendations: [
+            'Eat warm, cooked, and moist foods',
+            'Favor sweet, sour, and salty tastes',
+            'Avoid cold, dry, and raw foods',
+            'Maintain regular meal times'
+          ]
         },
-        recommendations: [
-          'Eat warm, cooked, and moist foods',
-          'Favor sweet, sour, and salty tastes',
-          'Avoid cold, dry, and raw foods',
-          'Maintain regular meal times',
-          'Use warming spices like ginger, cumin, and cinnamon',
-          'Stay hydrated with warm beverages'
-        ]
-      },
-      pitta: {
-        meals: {
-          breakfast: ['Cool oatmeal with milk', 'Fresh fruits', 'Coconut water'],
-          lunch: ['Basmati rice with vegetables', 'Salad with cucumber', 'Buttermilk'],
-          dinner: ['Quinoa with greens', 'Steamed vegetables', 'Herbal cooling tea'],
-          snacks: ['Fresh fruits', 'Coconut water', 'Sweet lassi']
+        pitta: {
+          meals: {
+            breakfast: ['Cool oatmeal with milk', 'Fresh fruits', 'Coconut water'],
+            lunch: ['Basmati rice with vegetables', 'Salad with cucumber', 'Buttermilk'],
+            dinner: ['Quinoa with greens', 'Steamed vegetables', 'Herbal cooling tea'],
+            snacks: ['Fresh fruits', 'Coconut water', 'Sweet lassi']
+          },
+          recommendations: [
+            'Eat cooling and refreshing foods',
+            'Favor sweet, bitter, and astringent tastes',
+            'Avoid spicy, oily, and fried foods'
+          ]
         },
-        recommendations: [
-          'Eat cooling and refreshing foods',
-          'Favor sweet, bitter, and astringent tastes',
-          'Avoid spicy, oily, and fried foods',
-          'Avoid excessive heat and sun',
-          'Use cooling spices like coriander, fennel, and mint',
-          'Drink plenty of cool (not cold) water'
-        ]
-      },
-      kapha: {
-        meals: {
-          breakfast: ['Light breakfast', 'Herbal tea with honey', 'Fresh fruits'],
-          lunch: ['Light grain with vegetables', 'Bean soup', 'Ginger tea'],
-          dinner: ['Light vegetable soup', 'Steamed vegetables', 'Herbal tea'],
-          snacks: ['Fresh fruits', 'Honey', 'Herbal tea']
-        },
-        recommendations: [
-          'Eat light, warm, and dry foods',
-          'Favor pungent, bitter, and astringent tastes',
-          'Avoid heavy, oily, and cold foods',
-          'Exercise regularly to stimulate metabolism',
-          'Use warming spices like black pepper, ginger, and turmeric',
-          'Reduce dairy and sweet foods'
-        ]
-      }
-    };
-
-    return dietPlans[dosha] || dietPlans.vata;
+        kapha: {
+          meals: {
+            breakfast: ['Light breakfast', 'Herbal tea with honey', 'Fresh fruits'],
+            lunch: ['Light grain with vegetables', 'Bean soup', 'Ginger tea'],
+            dinner: ['Light vegetable soup', 'Steamed vegetables', 'Herbal tea'],
+            snacks: ['Fresh fruits', 'Honey', 'Herbal tea']
+          },
+          recommendations: [
+            'Eat light, warm, and dry foods',
+            'Favor pungent, bitter, and astringent tastes',
+            'Avoid heavy, oily, and cold foods'
+          ]
+        }
+      };
+      return fallbackPlans[dosha] || fallbackPlans.vata;
+    }
   };
 
   const handleAnswer = (option) => {

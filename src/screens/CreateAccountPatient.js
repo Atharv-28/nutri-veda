@@ -337,8 +337,6 @@ const CreateAccountPatient = ({ navigation }) => {
               <Picker.Item label="Select Dietary Preference" value="" />
               <Picker.Item label="Veg" value="Veg" />
               <Picker.Item label="Vegan" value="Vegan" />
-              <Picker.Item label="Non-Veg" value="Non-Veg" />
-              <Picker.Item label="Satvik" value="Satvik" />
             </Picker>
           </View>
 

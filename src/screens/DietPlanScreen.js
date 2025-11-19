@@ -12,114 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { getDietPlan } from '../services/relationshipService';
-
-const dietPlans = {
-  vata: {
-    color: '#8E44AD',
-    title: 'Vata Diet Plan',
-    principles: [
-      'Eat warm, cooked foods',
-      'Regular meal times',
-      'Sweet, sour, and salty tastes',
-      'Avoid cold, dry, and raw foods'
-    ],
-    breakfast: [
-      'Warm oatmeal with nuts and honey',
-      'Cooked fruits like stewed apples',
-      'Herbal tea (ginger, cinnamon)',
-      'Whole grain toast with ghee'
-    ],
-    lunch: [
-      'Rice with dal and vegetables',
-      'Steamed vegetables with spices',
-      'Warm soup or stew',
-      'Buttermilk or warm milk'
-    ],
-    dinner: [
-      'Khichdi with ghee',
-      'Cooked vegetables',
-      'Warm herbal tea',
-      'Light, easy to digest foods'
-    ],
-    snacks: [
-      'Dates and nuts',
-      'Warm milk with turmeric',
-      'Cooked sweet fruits',
-      'Herbal teas'
-    ],
-    spices: ['Ginger', 'Cinnamon', 'Cardamom', 'Cumin', 'Coriander', 'Fennel']
-  },
-  pitta: {
-    color: '#E74C3C',
-    title: 'Pitta Diet Plan',
-    principles: [
-      'Eat cool, refreshing foods',
-      'Sweet, bitter, and astringent tastes',
-      'Avoid spicy, sour, and salty foods',
-      'Regular meal times, don\'t skip meals'
-    ],
-    breakfast: [
-      'Fresh fruit salad',
-      'Coconut water',
-      'Oats with milk and sweet fruits',
-      'Herbal tea (mint, rose)'
-    ],
-    lunch: [
-      'Basmati rice with mild dal',
-      'Leafy green vegetables',
-      'Cucumber and mint salad',
-      'Coconut water or buttermilk'
-    ],
-    dinner: [
-      'Light rice or quinoa',
-      'Steamed vegetables',
-      'Cool herbal teas',
-      'Avoid late night eating'
-    ],
-    snacks: [
-      'Sweet fruits (melons, grapes)',
-      'Coconut water',
-      'Cool smoothies',
-      'Almonds (soaked)'
-    ],
-    spices: ['Coriander', 'Fennel', 'Cardamom', 'Mint', 'Dill', 'Turmeric (small amounts)']
-  },
-  kapha: {
-    color: '#27AE60',
-    title: 'Kapha Diet Plan',
-    principles: [
-      'Eat light, warm, spicy foods',
-      'Pungent, bitter, and astringent tastes',
-      'Avoid heavy, oily, sweet foods',
-      'Eat your largest meal at lunch'
-    ],
-    breakfast: [
-      'Light fruits (apples, pears)',
-      'Herbal tea with honey',
-      'Light grains (barley, quinoa)',
-      'Spiced tea with ginger'
-    ],
-    lunch: [
-      'Quinoa or barley with vegetables',
-      'Spiced lentils',
-      'Raw salads with lemon',
-      'Herbal tea or warm water'
-    ],
-    dinner: [
-      'Light soup or broth',
-      'Steamed vegetables',
-      'Herbal tea',
-      'Early, light dinner'
-    ],
-    snacks: [
-      'Apples with cinnamon',
-      'Herbal teas',
-      'Small portions of nuts',
-      'Vegetable juices'
-    ],
-    spices: ['Ginger', 'Black pepper', 'Turmeric', 'Cinnamon', 'Cloves', 'Mustard seeds']
-  }
-};
+import { generateDailyPlan, getDoshaColor } from '../data/nutriVedaDietEngine';
 
 const DietPlanScreen = ({ route, navigation }) => {
   const { dosha, patient, doctor, readOnly } = route.params || { dosha: 'vata' };
@@ -149,17 +42,86 @@ const DietPlanScreen = ({ route, navigation }) => {
     fetchDietPlan();
   }, [patient?.uid]);
 
-  // Use custom diet plan if available, otherwise use default template
+  // Helper function to format meal items from the new diet engine structure
+  const formatMealItems = (meal) => {
+    if (!meal) return [];
+    
+    const items = [];
+    // Extract all food items from meal object
+    if (meal.grains) items.push(...meal.grains);
+    if (meal.vegetables) items.push(...meal.vegetables);
+    if (meal.proteins) items.push(...meal.proteins);
+    if (meal.fats) items.push(...meal.fats);
+    if (meal.fruits) items.push(...meal.fruits);
+    if (meal.beverages) items.push(...meal.beverages);
+    
+    // Add timing and portion information as separate items
+    if (meal.timing) items.push(`⏰ Best time: ${meal.timing}`);
+    if (meal.portions) items.push(`📊 Portions: ${meal.portions}`);
+    if (meal.note) items.push(`💡 Note: ${meal.note}`);
+    
+    return items.length > 0 ? items : ['No items available'];
+  };
+
+  // Generate default plan using the diet engine
+  const generateDefaultPlan = (doshaType) => {
+    try {
+      const generatedPlan = generateDailyPlan(doshaType.toLowerCase());
+      return {
+        color: getDoshaColor(doshaType.toLowerCase()),
+        title: `${generatedPlan.doshaType} Diet Plan`,
+        breakfast: formatMealItems(generatedPlan.meals.breakfast),
+        lunch: formatMealItems(generatedPlan.meals.lunch),
+        dinner: formatMealItems(generatedPlan.meals.dinner),
+        snacks: formatMealItems(generatedPlan.meals.snacks),
+        principles: generatedPlan.keyPrinciples,
+        spices: generatedPlan.spices,
+        spicesNote: generatedPlan.spicesNote,
+        doshaInfo: generatedPlan.doshaInfo,
+        mindfulEating: generatedPlan.mindfulEating,
+        dailyRoutine: generatedPlan.dailyRoutine
+      };
+    } catch (error) {
+      console.error('Error generating default plan:', error);
+      // Fallback minimal plan
+      return {
+        color: getDoshaColor(doshaType.toLowerCase()),
+        title: `${doshaType.charAt(0).toUpperCase() + doshaType.slice(1)} Diet Plan`,
+        breakfast: ['Please complete assessment to view personalized plan'],
+        lunch: ['Please complete assessment to view personalized plan'],
+        dinner: ['Please complete assessment to view personalized plan'],
+        snacks: ['Please complete assessment to view personalized plan'],
+        principles: ['Complete your Prakruti assessment to get personalized recommendations'],
+        spices: []
+      };
+    }
+  };
+
+  // Use custom diet plan if available, otherwise generate using diet engine
   const plan = customDietPlan 
     ? {
-        ...dietPlans[dosha],
-        breakfast: customDietPlan.meals?.breakfast || dietPlans[dosha].breakfast,
-        lunch: customDietPlan.meals?.lunch || dietPlans[dosha].lunch,
-        dinner: customDietPlan.meals?.dinner || dietPlans[dosha].dinner,
-        snacks: customDietPlan.meals?.snacks || dietPlans[dosha].snacks,
-        principles: customDietPlan.recommendations || dietPlans[dosha].principles,
+        color: getDoshaColor(dosha.toLowerCase()),
+        title: `${dosha.charAt(0).toUpperCase() + dosha.slice(1)} Diet Plan`,
+        breakfast: customDietPlan.meals?.breakfast 
+          ? formatMealItems(customDietPlan.meals.breakfast)
+          : generateDefaultPlan(dosha).breakfast,
+        lunch: customDietPlan.meals?.lunch 
+          ? formatMealItems(customDietPlan.meals.lunch)
+          : generateDefaultPlan(dosha).lunch,
+        dinner: customDietPlan.meals?.dinner 
+          ? formatMealItems(customDietPlan.meals.dinner)
+          : generateDefaultPlan(dosha).dinner,
+        snacks: customDietPlan.meals?.snacks 
+          ? formatMealItems(customDietPlan.meals.snacks)
+          : generateDefaultPlan(dosha).snacks,
+        principles: customDietPlan.keyPrinciples || customDietPlan.recommendations || generateDefaultPlan(dosha).principles,
+        spices: customDietPlan.spices || generateDefaultPlan(dosha).spices,
+        doshaInfo: customDietPlan.doshaInfo,
+        mindfulEating: customDietPlan.mindfulEating,
+        dailyRoutine: customDietPlan.dailyRoutine,
+        spicesNote: customDietPlan.spicesNote
       }
-    : dietPlans[dosha];
+    : generateDefaultPlan(dosha);
 
   const tabs = [
     { key: 'breakfast', title: 'Breakfast', icon: 'sunny' },
@@ -250,6 +212,9 @@ const DietPlanScreen = ({ route, navigation }) => {
 
         <View style={styles.spicesCard}>
           <Text style={styles.cardTitle}>Recommended Spices</Text>
+          {plan.spicesNote && (
+            <Text style={styles.spicesNote}>{plan.spicesNote}</Text>
+          )}
           <View style={styles.spicesContainer}>
             {plan.spices.map((spice, index) => (
               <View key={index} style={[styles.spiceTag, { borderColor: plan.color }]}>
@@ -258,6 +223,80 @@ const DietPlanScreen = ({ route, navigation }) => {
             ))}
           </View>
         </View>
+
+        {plan.doshaInfo && (
+          <View style={styles.doshaInfoCard}>
+            <Text style={styles.cardTitle}>Your Dosha Balance Goal</Text>
+            <View style={styles.doshaInfoItem}>
+              <Ionicons name="fitness" size={16} color={plan.color} />
+              <Text style={styles.doshaInfoText}>Goal: {plan.doshaInfo.goal}</Text>
+            </View>
+            <View style={styles.doshaInfoItem}>
+              <Ionicons name="leaf" size={16} color={plan.color} />
+              <Text style={styles.doshaInfoText}>Focus on: {plan.doshaInfo.qualities}</Text>
+            </View>
+            <View style={styles.doshaInfoItem}>
+              <Ionicons name="restaurant" size={16} color={plan.color} />
+              <Text style={styles.doshaInfoText}>Tastes: {plan.doshaInfo.rasas}</Text>
+            </View>
+            <View style={styles.doshaInfoItem}>
+              <Ionicons name="close-circle" size={16} color="#E74C3C" />
+              <Text style={styles.doshaInfoText}>Avoid: {plan.doshaInfo.avoid}</Text>
+            </View>
+          </View>
+        )}
+
+        {plan.dailyRoutine && (
+          <View style={styles.routineCard}>
+            <Text style={styles.cardTitle}>Daily Routine</Text>
+            {plan.dailyRoutine.map((routine, index) => (
+              <View key={index} style={styles.routineItem}>
+                <Ionicons name="time" size={16} color={plan.color} />
+                <Text style={styles.routineText}>{routine}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {plan.mindfulEating && (
+          <>
+            <View style={styles.mindfulCard}>
+              <Text style={styles.cardTitle}>🧘 Pre-Meal Reminders</Text>
+              {plan.mindfulEating.preMealReminders.map((reminder, index) => (
+                <View key={index} style={styles.mindfulItem}>
+                  <Text style={styles.mindfulText}>{reminder}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.mindfulCard}>
+              <Text style={styles.cardTitle}>🍽️ During Your Meal</Text>
+              {plan.mindfulEating.duringMeal.map((tip, index) => (
+                <View key={index} style={styles.mindfulItem}>
+                  <Text style={styles.mindfulText}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.mindfulCard}>
+              <Text style={styles.cardTitle}>✨ After Your Meal</Text>
+              {plan.mindfulEating.postMeal.map((tip, index) => (
+                <View key={index} style={styles.mindfulItem}>
+                  <Text style={styles.mindfulText}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.mindfulCard}>
+              <Text style={styles.cardTitle}>⏰ Meal Timing Rules</Text>
+              {plan.mindfulEating.timingRules.map((rule, index) => (
+                <View key={index} style={styles.mindfulItem}>
+                  <Text style={styles.mindfulText}>{rule}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
         <View style={styles.tipsCard}>
           <Text style={styles.cardTitle}>Additional Tips</Text>
@@ -409,6 +448,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  spicesNote: {
+    fontSize: 13,
+    color: '#666',
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
   spicesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -423,6 +468,70 @@ const styles = StyleSheet.create({
   spiceText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  doshaInfoCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  doshaInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  doshaInfoText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 10,
+    flex: 1,
+  },
+  routineCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  routineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  routineText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 10,
+    flex: 1,
+  },
+  mindfulCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  mindfulItem: {
+    marginBottom: 10,
+    paddingLeft: 10,
+  },
+  mindfulText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
   },
   tipsCard: {
     backgroundColor: 'white',
